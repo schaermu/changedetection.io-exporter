@@ -1,20 +1,35 @@
-# Copyright 2015 The Prometheus Authors
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+BINARY_NAME=changedetectionio_exporter
+GOCOVER=go tool cover
+GOTESTSUM=go run gotest.tools/gotestsum@latest
 
-# Needs to be defined before including Makefile.common to auto-generate targets
-DOCKER_ARCHS ?= amd64 armv7 arm64 ppc64le s390x
-DOCKER_IMAGE_NAME ?= changedetectionio-exporter
+.DEFAULT_GOAL := all
+.PHONY: clean test watch cover run start
 
-all:: vet common-all
+all: clean test build
 
-include Makefile.common
+docker:
+	docker build -t ghcr.io/schaermu/changedetection.io-exporter:latest .
+
+build:
+	GOARCH=amd64 GOOS=linux go build -o ./build/${BINARY_NAME} .
+
+run:
+	./build/${BINARY_NAME}
+
+start: clean build run
+
+clean:
+	go clean
+	go clean -testcache
+	rm -rf ./build
+
+test:
+	$(GOTESTSUM) -f testname -- -tags=test -coverprofile=coverage.txt -race -covermode=atomic ./...
+
+watch:
+	$(GOTESTSUM) --watch -f testname -- -tags=test -coverprofile=coverage.txt -race -covermode=atomic ./...
+
+cover:
+	$(GOTESTSUM) -f testname -- -tags=test ./... -coverprofile=coverage.out
+	$(GOCOVER) -func=coverage.out
+	$(GOCOVER) -html=coverage.out -o coverage.html
