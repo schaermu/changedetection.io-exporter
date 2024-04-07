@@ -1,13 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 )
 
-func createTestServer(t *testing.T, url string, payloadFile string) *httptest.Server {
+func CreateTestApiServer(t *testing.T, url string, payloadFile string) *httptest.Server {
 	var expected []byte
 	var err error
 	if payloadFile == "" {
@@ -29,7 +30,7 @@ func createTestServer(t *testing.T, url string, payloadFile string) *httptest.Se
 }
 
 func TestGetRequestApiKey(t *testing.T) {
-	server := createTestServer(t, "/api/v1/watch", "")
+	server := CreateTestApiServer(t, "/api/v1/watch", "")
 	defer server.Close()
 
 	api := NewApiClient(server.URL, "foo-bar-key")
@@ -40,7 +41,7 @@ func TestGetRequestApiKey(t *testing.T) {
 
 func TestGetWatches(t *testing.T) {
 	// Start a local HTTP server
-	server := createTestServer(t, "/api/v1/watch", "./test/getWatches.json")
+	server := CreateTestApiServer(t, "/api/v1/watch", "./test/json/getWatches.json")
 	defer server.Close()
 
 	api := NewApiClient(server.URL, "foo-bar-key")
@@ -51,8 +52,10 @@ func TestGetWatches(t *testing.T) {
 }
 
 func TestGetLatestPriceSnapshot(t *testing.T) {
+	id := "6a4b7d5c-fee4-4616-9f43-4ac97046b595"
+
 	// Start a local HTTP server
-	server := createTestServer(t, "/api/v1/watch/6a4b7d5c-fee4-4616-9f43-4ac97046b595/history/latest", "./test/getLatestPriceSnapshot.json")
+	server := CreateTestApiServer(t, fmt.Sprintf("/api/v1/watch/%s/history/latest", id), fmt.Sprintf("./test/json/getLatestPriceSnapshot_%s.json", id))
 	defer server.Close()
 
 	api := NewApiClient(server.URL, "foo-bar-key")
