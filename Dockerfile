@@ -4,14 +4,13 @@ ARG GO_VERSION=1.22.2
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine as build
 RUN apk update && apk add --no-cache git
 
+# install dependencies
 WORKDIR /src
-
 COPY go.mod go.sum ./
 RUN go mod download
 
+# build statically linked binary
 COPY . .
-
-# build static binary to run on distroless/static
 ARG TARGETOS TARGETARCH
 RUN --mount=target=. \
     --mount=type=cache,target=/root/.cache/go-build \
@@ -20,12 +19,7 @@ RUN --mount=target=. \
 
 # build runtime image
 FROM --platform=$TARGETPLATFORM gcr.io/distroless/static-debian12
-
-LABEL maintainer="schaermu"
-
 USER nonroot:nonroot
 COPY --from=build --chown=nonroot:nonroot /changedetectionio_exporter /changedetectionio_exporter
-
-EXPOSE 8080
-
+EXPOSE 9123
 ENTRYPOINT ["/changedetectionio_exporter"]
