@@ -8,7 +8,7 @@ GOTESTSUM=go run gotest.tools/gotestsum@latest
 all: clean test build
 
 docker:
-	docker build -t ghcr.io/schaermu/changedetection.io-exporter:latest .
+	docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t ghcr.io/schaermu/changedetection.io-exporter:latest .
 
 build:
 	GOARCH=amd64 GOOS=linux go build -o ./build/${BINARY_NAME} .
