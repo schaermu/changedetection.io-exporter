@@ -56,7 +56,10 @@ type priceCollector struct {
 func newPriceCollector(endpoint string, key string) (*priceCollector, error) {
 	// load all registered watches from changedetection.io API
 	client := NewApiClient(endpoint, key)
-	watches := client.getWatches()
+	watches, err := client.getWatches()
+	if err != nil {
+		return nil, err
+	}
 
 	log.Infof("Loaded %d watches from changedetection.io API", len(watches))
 
@@ -80,11 +83,15 @@ func (c *priceCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func (c *priceCollector) Collect(ch chan<- prometheus.Metric) {
 	// check for new watches before collecting metrics
-	watches := c.apiClient.getWatches()
-	for id, watch := range watches {
-		if _, ok := c.priceMetrics[id]; !ok {
-			c.priceMetrics[id] = newPriceMetric(prometheus.Labels{"title": watch.Title}, c.apiClient, id)
-			prometheus.MustRegister(c.priceMetrics[id])
+	watches, err := c.apiClient.getWatches()
+	if err != nil {
+		log.Errorf("error while fetching watches %v", err)
+	} else {
+		for id, watch := range watches {
+			if _, ok := c.priceMetrics[id]; !ok {
+				c.priceMetrics[id] = newPriceMetric(prometheus.Labels{"title": watch.Title}, c.apiClient, id)
+				prometheus.MustRegister(c.priceMetrics[id])
+			}
 		}
 	}
 

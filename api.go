@@ -5,6 +5,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -35,12 +36,21 @@ func NewApiClient(baseUrl string, key string) *ApiClient {
 	}
 }
 
-func (client *ApiClient) getWatches() map[string]WatchItem {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/watch", client.baseUrl), nil)
+func (client *ApiClient) getRequest(method string, url string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", client.baseUrl, url), body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("x-api-key", client.key)
+	return req, nil
+}
+
+func (client *ApiClient) getWatches() (map[string]WatchItem, error) {
+	req, err := client.getRequest("GET", "watch", nil)
 	if err != nil {
 		panic(err)
 	}
-	req.Header.Add("x-api-key", client.key)
+
 	res, err := client.Client.Do(req)
 	if err != nil {
 		panic(err)
@@ -52,15 +62,14 @@ func (client *ApiClient) getWatches() map[string]WatchItem {
 	if err != nil {
 		panic(err)
 	}
-	return watches
+	return watches, nil
 }
 
 func (client *ApiClient) getLatestPriceSnapshot(id string) (*PriceData, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/watch/%s/history/latest", client.baseUrl, id), nil)
+	req, err := client.getRequest("GET", fmt.Sprintf("watch/%s/history/latest", id), nil)
 	if err != nil {
 		panic(err)
 	}
-	req.Header.Add("x-api-key", client.key)
 	res, err := client.Client.Do(req)
 
 	if res.StatusCode == 404 {
