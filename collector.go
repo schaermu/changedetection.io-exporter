@@ -53,7 +53,7 @@ type priceCollector struct {
 	apiClient    *ApiClient
 }
 
-func newPriceCollector(endpoint string, key string) (*priceCollector, error) {
+func NewPriceCollector(endpoint string, key string) (*priceCollector, error) {
 	// load all registered watches from changedetection.io API
 	client := NewApiClient(endpoint, key)
 	watches, err := client.getWatches()

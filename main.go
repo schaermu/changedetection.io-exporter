@@ -16,20 +16,20 @@ import (
 
 func main() {
 	var (
-		port       = os.Getenv("PORT")
-		cdioApiUrl = os.Getenv("CDIO_API_BASE_URL")
-		cdioApiKey = os.Getenv("CDIO_API_KEY")
+		port   = os.Getenv("PORT")
+		apiUrl = os.Getenv("CDIO_API_BASE_URL")
+		apiKey = os.Getenv("CDIO_API_KEY")
 	)
 
 	if port == "" {
 		port = "8123"
 	}
-	if cdioApiUrl == "" || cdioApiKey == "" {
+	if apiUrl == "" || apiKey == "" {
 		log.Fatal("CDIO_API_BASE_URL and CDIO_API_KEY environment variables must be set")
 		os.Exit(1)
 	}
 
-	collector, err := newPriceCollector(cdioApiUrl, cdioApiKey)
+	collector, err := NewPriceCollector(apiUrl, apiKey)
 	if err != nil {
 		log.Fatal(err)
 	}
