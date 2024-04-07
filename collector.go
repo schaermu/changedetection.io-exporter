@@ -17,11 +17,11 @@ const (
 // but we just won't be exposing them as metrics.
 type priceMetric struct {
 	desc      *prometheus.Desc
-	apiClient *cdioApiClient
+	apiClient *ApiClient
 	UUID      string
 }
 
-func newPriceMetric(labels prometheus.Labels, apiClient *cdioApiClient, uuid string) priceMetric {
+func newPriceMetric(labels prometheus.Labels, apiClient *ApiClient, uuid string) priceMetric {
 	return priceMetric{
 		desc: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "watch", "price"),
@@ -50,12 +50,12 @@ func (m priceMetric) Collect(ch chan<- prometheus.Metric) {
 
 type priceCollector struct {
 	priceMetrics map[string]priceMetric
-	apiClient    *cdioApiClient
+	apiClient    *ApiClient
 }
 
 func newPriceCollector(endpoint string, key string) (*priceCollector, error) {
 	// load all registered watches from changedetection.io API
-	client := newCdioApiClient(endpoint, key)
+	client := NewApiClient(endpoint, key)
 	watches := client.getWatches()
 
 	log.Infof("Loaded %d watches from changedetection.io API", len(watches))

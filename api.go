@@ -8,10 +8,10 @@ import (
 	"net/http"
 )
 
-type cdioApiClient struct {
+type ApiClient struct {
+	Client  *http.Client
 	baseUrl string
 	key     string
-	client  *http.Client
 }
 
 type WatchItem struct {
@@ -27,21 +27,21 @@ type PriceData struct {
 	Availability string `json:"availability"`
 }
 
-func newCdioApiClient(baseUrl string, key string) *cdioApiClient {
-	return &cdioApiClient{
+func NewApiClient(baseUrl string, key string) *ApiClient {
+	return &ApiClient{
+		Client:  &http.Client{},
 		baseUrl: fmt.Sprintf("%s/api/v1", baseUrl),
 		key:     key,
-		client:  &http.Client{},
 	}
 }
 
-func (client *cdioApiClient) getWatches() map[string]WatchItem {
+func (client *ApiClient) getWatches() map[string]WatchItem {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/watch", client.baseUrl), nil)
 	if err != nil {
 		panic(err)
 	}
 	req.Header.Add("x-api-key", client.key)
-	res, err := client.client.Do(req)
+	res, err := client.Client.Do(req)
 	if err != nil {
 		panic(err)
 	}
@@ -55,13 +55,13 @@ func (client *cdioApiClient) getWatches() map[string]WatchItem {
 	return watches
 }
 
-func (client *cdioApiClient) getLatestPriceSnapshot(id string) (*PriceData, error) {
+func (client *ApiClient) getLatestPriceSnapshot(id string) (*PriceData, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/watch/%s/history/latest", client.baseUrl, id), nil)
 	if err != nil {
 		panic(err)
 	}
 	req.Header.Add("x-api-key", client.key)
-	res, err := client.client.Do(req)
+	res, err := client.Client.Do(req)
 
 	if res.StatusCode == 404 {
 		// watch not found, was probably removed
