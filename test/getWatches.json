@@ -1,0 +1,16 @@
+{
+    "6a4b7d5c-fee4-4616-9f43-4ac97046b595": {
+        "last_changed": 1677103794,
+        "last_checked": 1677103794,
+        "last_error": false,
+        "title": "Random Quote",
+        "url": "http://www.quotationspage.com/random.php"
+    },
+    "e6f5fd5c-dbfe-468b-b8f3-f9d6ff5ad69b": {
+        "last_changed": 0,
+        "last_checked": 1676662819,
+        "last_error": false,
+        "title": "QuickLook",
+        "url": "https://github.com/QL-Win/QuickLook/tags"
+    }
+}
