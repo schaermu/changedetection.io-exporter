@@ -11,10 +11,6 @@ const (
 	namespace = "changedetectionio"
 )
 
-// Define a struct for you collector that contains pointers
-// to prometheus descriptors for each metric you wish to expose.
-// Note you can also include fields of other types if they provide utility
-// but we just won't be exposing them as metrics.
 type priceMetric struct {
 	desc      *prometheus.Desc
 	apiClient *ApiClient
@@ -40,7 +36,7 @@ func (m priceMetric) Describe(ch chan<- *prometheus.Desc) {
 func (m priceMetric) Collect(ch chan<- prometheus.Metric) {
 	// get latest snapshot
 	if pData, err := m.apiClient.getLatestPriceSnapshot(m.UUID); err == nil {
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(pData.Price))
+		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, pData.Price)
 	} else {
 		// error while fetching latest value for metric, unregister
 		log.Errorf("error while fetching price snapshot %v", err)
@@ -49,8 +45,8 @@ func (m priceMetric) Collect(ch chan<- prometheus.Metric) {
 }
 
 type priceCollector struct {
+	ApiClient    *ApiClient
 	priceMetrics map[string]priceMetric
-	apiClient    *ApiClient
 }
 
 func NewPriceCollector(endpoint string, key string) (*priceCollector, error) {
@@ -70,7 +66,7 @@ func NewPriceCollector(endpoint string, key string) (*priceCollector, error) {
 	}
 
 	return &priceCollector{
-		apiClient:    client,
+		ApiClient:    client,
 		priceMetrics: priceMetrics,
 	}, nil
 }
@@ -83,14 +79,15 @@ func (c *priceCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func (c *priceCollector) Collect(ch chan<- prometheus.Metric) {
 	// check for new watches before collecting metrics
-	watches, err := c.apiClient.getWatches()
+	watches, err := c.ApiClient.getWatches()
 	if err != nil {
-		log.Errorf("error while fetching watches %v", err)
+		log.Errorf("error while fetching watches: %v", err)
 	} else {
 		for id, watch := range watches {
 			if _, ok := c.priceMetrics[id]; !ok {
-				c.priceMetrics[id] = newPriceMetric(prometheus.Labels{"title": watch.Title}, c.apiClient, id)
+				c.priceMetrics[id] = newPriceMetric(prometheus.Labels{"title": watch.Title}, c.ApiClient, id)
 				prometheus.MustRegister(c.priceMetrics[id])
+				log.Infof("Picked up new watch %s, registered as metric %s", watch.Title, id)
 			}
 		}
 	}
