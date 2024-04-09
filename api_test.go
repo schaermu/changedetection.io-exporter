@@ -72,3 +72,23 @@ func TestGetLatestPriceSnapshot(t *testing.T) {
 	equals(t, float64(100), priceData.Price)
 	equals(t, "USD", priceData.Currency)
 }
+
+func TestSetBaseUrl(t *testing.T) {
+	api := NewApiClient("http://localhost:8080", "foo-bar-key")
+	api.SetBaseUrl("http://localhost:8081")
+	equals(t, "http://localhost:8081/api/v1", api.baseUrl)
+}
+
+func TestGetLastestPriceSnapshot_NotFound(t *testing.T) {
+	existingId := "6a4b7d5c-fee4-4616-9f43-4ac97046b595"
+	lookupId := "foo-bar-id"
+
+	// Start a local HTTP server
+	server := CreateSimpleTestApiServer(t, fmt.Sprintf("/api/v1/watch/%s/history/latest", existingId), "")
+	defer server.Close()
+
+	api := NewApiClient(server.URL, "foo-bar-key")
+	priceData, err := api.getLatestPriceSnapshot(lookupId)
+	equals(t, fmt.Errorf("watch %s not found", lookupId), err)
+	equals(t, (*PriceData)(nil), priceData)
+}

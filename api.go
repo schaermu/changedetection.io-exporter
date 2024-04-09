@@ -72,7 +72,7 @@ func (client *ApiClient) getWatches() (map[string]WatchItem, error) {
 func (client *ApiClient) getLatestPriceSnapshot(id string) (*PriceData, error) {
 	req, err := client.getRequest("GET", fmt.Sprintf("watch/%s/history/latest", id), nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	res, err := client.Client.Do(req)
 
@@ -82,14 +82,14 @@ func (client *ApiClient) getLatestPriceSnapshot(id string) (*PriceData, error) {
 	}
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer res.Body.Close()
 
 	var priceData = PriceData{}
 	err = json.NewDecoder(res.Body).Decode(&priceData)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("error while decoding price data: %v", err)
 	}
 	return &priceData, nil
 }
