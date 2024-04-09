@@ -23,9 +23,9 @@ type WatchItem struct {
 }
 
 type PriceData struct {
-	Price        int32  `json:"price"`
-	Currency     string `json:"priceCurrency"`
-	Availability string `json:"availability"`
+	Price        float64 `json:"price"`
+	Currency     string  `json:"priceCurrency"`
+	Availability string  `json:"availability"`
 }
 
 func NewApiClient(baseUrl string, key string) *ApiClient {
@@ -34,6 +34,10 @@ func NewApiClient(baseUrl string, key string) *ApiClient {
 		baseUrl: fmt.Sprintf("%s/api/v1", baseUrl),
 		key:     key,
 	}
+}
+
+func (client *ApiClient) SetBaseUrl(baseUrl string) {
+	client.baseUrl = fmt.Sprintf("%s/api/v1", baseUrl)
 }
 
 func (client *ApiClient) getRequest(method string, url string, body io.Reader) (*http.Request, error) {
@@ -48,19 +52,19 @@ func (client *ApiClient) getRequest(method string, url string, body io.Reader) (
 func (client *ApiClient) getWatches() (map[string]WatchItem, error) {
 	req, err := client.getRequest("GET", "watch", nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	res, err := client.Client.Do(req)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer res.Body.Close()
 
 	watches := make(map[string]WatchItem)
 	err = json.NewDecoder(res.Body).Decode(&watches)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	return watches, nil
 }
