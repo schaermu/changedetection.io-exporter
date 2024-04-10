@@ -1,10 +1,12 @@
 // SPDX-FileCopyrightText: 2024 Stefan Schärmeli <schaermu@pm.me>
 // SPDX-License-Identifier: MIT
-package main
+package collectors
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/schaermu/changedetection.io-exporter/internal/cdio"
 )
 
 const (
@@ -13,11 +15,11 @@ const (
 
 type priceMetric struct {
 	desc      *prometheus.Desc
-	apiClient *ApiClient
+	apiClient *cdio.ApiClient
 	UUID      string
 }
 
-func newPriceMetric(labels prometheus.Labels, apiClient *ApiClient, uuid string) priceMetric {
+func newPriceMetric(labels prometheus.Labels, apiClient *cdio.ApiClient, uuid string) priceMetric {
 	return priceMetric{
 		desc: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "watch", "price"),
@@ -35,7 +37,7 @@ func (m priceMetric) Describe(ch chan<- *prometheus.Desc) {
 
 func (m priceMetric) Collect(ch chan<- prometheus.Metric) {
 	// get latest snapshot
-	if pData, err := m.apiClient.getLatestPriceSnapshot(m.UUID); err == nil {
+	if pData, err := m.apiClient.GetLatestPriceSnapshot(m.UUID); err == nil {
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, pData.Price)
 	} else {
 		// error while fetching latest value for metric, unregister
@@ -45,14 +47,14 @@ func (m priceMetric) Collect(ch chan<- prometheus.Metric) {
 }
 
 type priceCollector struct {
-	ApiClient    *ApiClient
+	ApiClient    *cdio.ApiClient
 	priceMetrics map[string]priceMetric
 }
 
 func NewPriceCollector(endpoint string, key string) (*priceCollector, error) {
 	// load all registered watches from changedetection.io API
-	client := NewApiClient(endpoint, key)
-	watches, err := client.getWatches()
+	client := cdio.NewApiClient(endpoint, key)
+	watches, err := client.GetWatches()
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +81,7 @@ func (c *priceCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func (c *priceCollector) Collect(ch chan<- prometheus.Metric) {
 	// check for new watches before collecting metrics
-	watches, err := c.ApiClient.getWatches()
+	watches, err := c.ApiClient.GetWatches()
 	if err != nil {
 		log.Errorf("error while fetching watches: %v", err)
 	} else {

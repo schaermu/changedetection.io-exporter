@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2024 Stefan Schärmeli <schaermu@pm.me>
 // SPDX-License-Identifier: MIT
-package main
+package cdio
 
 import (
 	"encoding/json"
@@ -49,7 +49,7 @@ func (client *ApiClient) getRequest(method string, url string, body io.Reader) (
 	return req, nil
 }
 
-func (client *ApiClient) getWatches() (map[string]WatchItem, error) {
+func (client *ApiClient) GetWatches() (map[string]WatchItem, error) {
 	req, err := client.getRequest("GET", "watch", nil)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (client *ApiClient) getWatches() (map[string]WatchItem, error) {
 	return watches, nil
 }
 
-func (client *ApiClient) getLatestPriceSnapshot(id string) (*PriceData, error) {
+func (client *ApiClient) GetLatestPriceSnapshot(id string) (*PriceData, error) {
 	req, err := client.getRequest("GET", fmt.Sprintf("watch/%s/history/latest", id), nil)
 	if err != nil {
 		return nil, err
