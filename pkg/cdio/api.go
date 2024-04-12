@@ -63,16 +63,17 @@ func (client *ApiClient) GetLatestPriceSnapshot(id string) (*data.PriceData, err
 	if err != nil {
 		return nil, err
 	}
+
 	res, err := client.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
 
 	if res.StatusCode == 404 {
 		// watch not found, was probably removed
 		return nil, fmt.Errorf("watch %s not found", id)
 	}
 
-	if err != nil {
-		return nil, err
-	}
 	defer res.Body.Close()
 
 	var priceData = data.PriceData{}
