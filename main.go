@@ -10,26 +10,27 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/schaermu/changedetection.io-exporter/pkg/collectors"
 
 	log "github.com/sirupsen/logrus"
 )
 
 func main() {
 	var (
-		port       = os.Getenv("PORT")
-		cdioApiUrl = os.Getenv("CDIO_API_BASE_URL")
-		cdioApiKey = os.Getenv("CDIO_API_KEY")
+		port   = os.Getenv("PORT")
+		apiUrl = os.Getenv("CDIO_API_BASE_URL")
+		apiKey = os.Getenv("CDIO_API_KEY")
 	)
 
 	if port == "" {
-		port = "8123"
+		port = "9123"
 	}
-	if cdioApiUrl == "" || cdioApiKey == "" {
+	if apiUrl == "" || apiKey == "" {
 		log.Fatal("CDIO_API_BASE_URL and CDIO_API_KEY environment variables must be set")
 		os.Exit(1)
 	}
 
-	collector, err := newPriceCollector(cdioApiUrl, cdioApiKey)
+	collector, err := collectors.NewPriceCollector(apiUrl, apiKey)
 	if err != nil {
 		log.Fatal(err)
 	}

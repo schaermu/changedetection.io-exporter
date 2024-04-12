@@ -1,0 +1,4 @@
+# HELP changedetectionio_watch_price Current price of an offer type watch
+# TYPE changedetectionio_watch_price gauge
+changedetectionio_watch_price{title="Item 1"} 100
+changedetectionio_watch_price{title="Item 2"} 200

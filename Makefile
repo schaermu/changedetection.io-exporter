@@ -24,12 +24,12 @@ clean:
 	rm -rf ./build
 
 test:
-	$(GOTESTSUM) -f testname -- -tags=test -coverprofile=coverage.txt -race -covermode=atomic ./...
+	$(GOTESTSUM) -f testname -- -tags=test -coverprofile=coverage.txt -race -covermode=atomic ./pkg/...
 
 watch:
 	$(GOTESTSUM) --watch -f testname -- -tags=test -coverprofile=coverage.txt -race -covermode=atomic ./...
 
 cover:
-	$(GOTESTSUM) -f testname -- -tags=test ./... -coverprofile=coverage.out
+	$(GOTESTSUM) -f testname -- -tags=test ./pkg/... -coverprofile=coverage.out
 	$(GOCOVER) -func=coverage.out
 	$(GOCOVER) -html=coverage.out -o coverage.html
