@@ -11,7 +11,6 @@ import (
 	promtest "github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/schaermu/changedetection.io-exporter/internal/testutil"
 	"github.com/schaermu/changedetection.io-exporter/pkg/data"
-	"golang.org/x/exp/maps"
 )
 
 var (
@@ -35,17 +34,18 @@ func expectMetricCount(t *testing.T, c prometheus.Collector, expected int) {
 	}
 }
 
-func createCollectorTestDb() map[string]*data.WatchItem {
+// createCollectorTestDb creates a test database with two watch items and returns the UUID of the second item and the database.
+func createCollectorTestDb() (string, map[string]*data.WatchItem) {
 	watchDb := testutil.NewWatchDb(0)
 	uuid1, watch1 := testutil.NewTestItem("Item 1", 100, "USD")
 	uuid2, watch2 := testutil.NewTestItem("Item 2", 200, "USD")
 	watchDb[uuid1] = watch1
 	watchDb[uuid2] = watch2
-	return watchDb
+	return uuid2, watchDb
 }
 
 func TestPriceCollector(t *testing.T) {
-	watchDb := createCollectorTestDb()
+	_, watchDb := createCollectorTestDb()
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
@@ -58,8 +58,8 @@ func TestPriceCollector(t *testing.T) {
 	expectMetrics(t, c, "price_metrics.prom")
 }
 
-func TestAutoUnregisterCollector(t *testing.T) {
-	watchDb := createCollectorTestDb()
+func TestPriceCollector_RemoveWatchDuringRuntime(t *testing.T) {
+	keyToRemove, watchDb := createCollectorTestDb()
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
@@ -69,7 +69,6 @@ func TestAutoUnregisterCollector(t *testing.T) {
 	}
 	expectMetricCount(t, c, 2)
 
-	keyToRemove := maps.Keys(watchDb)[len(watchDb)-1]
 	delete(watchDb, keyToRemove)
 
 	expectMetricCount(t, c, 1)
@@ -77,7 +76,7 @@ func TestAutoUnregisterCollector(t *testing.T) {
 }
 
 func TestPriceCollector_NewWatchDuringRuntime(t *testing.T) {
-	watchDb := createCollectorTestDb()
+	_, watchDb := createCollectorTestDb()
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
