@@ -3,8 +3,11 @@
 package collectors
 
 import (
+	"sync"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/schaermu/changedetection.io-exporter/pkg/cdio"
+	"github.com/schaermu/changedetection.io-exporter/pkg/data"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -12,42 +15,12 @@ const (
 	namespace = "changedetectionio"
 )
 
-type priceMetric struct {
-	desc      *prometheus.Desc
-	apiClient *cdio.ApiClient
-	UUID      string
-}
-
-func newPriceMetric(labels prometheus.Labels, apiClient *cdio.ApiClient, uuid string) priceMetric {
-	return priceMetric{
-		desc: prometheus.NewDesc(
-			prometheus.BuildFQName(namespace, "watch", "price"),
-			"Current price of an offer type watch",
-			nil, labels,
-		),
-		apiClient: apiClient,
-		UUID:      uuid,
-	}
-}
-
-func (m priceMetric) Describe(ch chan<- *prometheus.Desc) {
-	ch <- m.desc
-}
-
-func (m priceMetric) Collect(ch chan<- prometheus.Metric) {
-	// get latest snapshot
-	if pData, err := m.apiClient.GetLatestPriceSnapshot(m.UUID); err == nil {
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, pData.Price)
-	} else {
-		// error while fetching latest value for metric, unregister
-		log.Errorf("error while fetching price snapshot %v", err)
-		prometheus.Unregister(m)
-	}
-}
-
 type priceCollector struct {
-	ApiClient    *cdio.ApiClient
-	priceMetrics map[string]priceMetric
+	sync.RWMutex
+
+	ApiClient *cdio.ApiClient
+	watches   map[string]data.WatchItem
+	price     *prometheus.Desc
 }
 
 func NewPriceCollector(endpoint string, key string) (*priceCollector, error) {
@@ -60,40 +33,37 @@ func NewPriceCollector(endpoint string, key string) (*priceCollector, error) {
 
 	log.Infof("Loaded %d watches from changedetection.io API", len(watches))
 
-	// configure price metrics for each watch
-	priceMetrics := make(map[string]priceMetric)
-	for id, watch := range watches {
-		priceMetrics[id] = newPriceMetric(prometheus.Labels{"title": watch.Title}, client, id)
-	}
-
 	return &priceCollector{
-		ApiClient:    client,
-		priceMetrics: priceMetrics,
+		ApiClient: client,
+		watches:   watches,
+		price: prometheus.NewDesc(
+			prometheus.BuildFQName(namespace, "watch", "price"),
+			"Current price of an offer type watch",
+			[]string{"title"}, nil,
+		),
 	}, nil
 }
 
 func (c *priceCollector) Describe(ch chan<- *prometheus.Desc) {
-	for _, metric := range c.priceMetrics {
-		metric.Describe(ch)
-	}
+	ch <- c.price
 }
 
 func (c *priceCollector) Collect(ch chan<- prometheus.Metric) {
+	c.RLock()
+	defer c.RUnlock()
+
 	// check for new watches before collecting metrics
 	watches, err := c.ApiClient.GetWatches()
 	if err != nil {
 		log.Errorf("error while fetching watches: %v", err)
 	} else {
-		for id, watch := range watches {
-			if _, ok := c.priceMetrics[id]; !ok {
-				c.priceMetrics[id] = newPriceMetric(prometheus.Labels{"title": watch.Title}, c.ApiClient, id)
-				prometheus.MustRegister(c.priceMetrics[id])
-				log.Infof("Picked up new watch %s, registered as metric %s", watch.Title, id)
-			}
-		}
+		c.watches = watches
 	}
 
-	for _, metric := range c.priceMetrics {
-		metric.Collect(ch)
+	for uuid, watch := range c.watches {
+		// get latest price snapshot
+		if pData, err := c.ApiClient.GetLatestPriceSnapshot(uuid); err == nil {
+			ch <- prometheus.MustNewConstMetric(c.price, prometheus.GaugeValue, pData.Price, []string{watch.Title}...)
+		}
 	}
 }
