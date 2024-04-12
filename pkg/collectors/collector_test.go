@@ -11,6 +11,7 @@ import (
 	promtest "github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/schaermu/changedetection.io-exporter/internal/testutil"
 	"github.com/schaermu/changedetection.io-exporter/pkg/data"
+	"golang.org/x/exp/maps"
 )
 
 var (
@@ -57,10 +58,6 @@ func TestPriceCollector(t *testing.T) {
 	expectMetrics(t, c, "price_metrics.prom")
 }
 
-/*
-Test commented out for now due to flakiness, something seems to be off with the testing registry.
-See https://github.com/schaermu/changedetection.io-exporter/issues/7.
-
 func TestAutoUnregisterCollector(t *testing.T) {
 	watchDb := createCollectorTestDb()
 	server := testutil.CreateTestApiServer(t, watchDb)
@@ -70,6 +67,7 @@ func TestAutoUnregisterCollector(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	expectMetricCount(t, c, 2)
 
 	keyToRemove := maps.Keys(watchDb)[len(watchDb)-1]
 	delete(watchDb, keyToRemove)
@@ -77,13 +75,8 @@ func TestAutoUnregisterCollector(t *testing.T) {
 	expectMetricCount(t, c, 1)
 	expectMetrics(t, c, "price_metrics_autounregister.prom")
 }
-*/
 
-/*
-Test commented out because of some weirdness with the testing registry, see https://stackoverflow.com/questions/78297112/how-to-test-dynamic-metric-registration-in-custom-prometheus-exporter.
-See issue https://github.com/schaermu/changedetection.io-exporter/issues/7.
-
-func TestAutoregisterPriceCollector(t *testing.T) {
+func TestPriceCollector_NewWatchDuringRuntime(t *testing.T) {
 	watchDb := createCollectorTestDb()
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
@@ -101,4 +94,3 @@ func TestAutoregisterPriceCollector(t *testing.T) {
 	expectMetricCount(t, c, 3)
 	expectMetrics(t, c, "price_metrics_autoregister.prom")
 }
-*/
