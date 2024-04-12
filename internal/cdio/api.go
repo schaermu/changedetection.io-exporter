@@ -7,25 +7,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/schaermu/changedetection.io-exporter/internal/data"
 )
 
 type ApiClient struct {
 	Client  *http.Client
 	baseUrl string
 	key     string
-}
-
-type WatchItem struct {
-	LastChanged int64  `json:"last_changed"`
-	LastChecked int64  `json:"last_checked"`
-	LastError   bool   `json:"last_error"`
-	Title       string `json:"title"`
-}
-
-type PriceData struct {
-	Price        float64 `json:"price"`
-	Currency     string  `json:"priceCurrency"`
-	Availability string  `json:"availability"`
 }
 
 func NewApiClient(baseUrl string, key string) *ApiClient {
@@ -49,7 +38,7 @@ func (client *ApiClient) getRequest(method string, url string, body io.Reader) (
 	return req, nil
 }
 
-func (client *ApiClient) GetWatches() (map[string]WatchItem, error) {
+func (client *ApiClient) GetWatches() (map[string]data.WatchItem, error) {
 	req, err := client.getRequest("GET", "watch", nil)
 	if err != nil {
 		return nil, err
@@ -61,7 +50,7 @@ func (client *ApiClient) GetWatches() (map[string]WatchItem, error) {
 	}
 	defer res.Body.Close()
 
-	watches := make(map[string]WatchItem)
+	watches := make(map[string]data.WatchItem)
 	err = json.NewDecoder(res.Body).Decode(&watches)
 	if err != nil {
 		return nil, err
@@ -69,7 +58,7 @@ func (client *ApiClient) GetWatches() (map[string]WatchItem, error) {
 	return watches, nil
 }
 
-func (client *ApiClient) GetLatestPriceSnapshot(id string) (*PriceData, error) {
+func (client *ApiClient) GetLatestPriceSnapshot(id string) (*data.PriceData, error) {
 	req, err := client.getRequest("GET", fmt.Sprintf("watch/%s/history/latest", id), nil)
 	if err != nil {
 		return nil, err
@@ -86,7 +75,7 @@ func (client *ApiClient) GetLatestPriceSnapshot(id string) (*PriceData, error) {
 	}
 	defer res.Body.Close()
 
-	var priceData = PriceData{}
+	var priceData = data.PriceData{}
 	err = json.NewDecoder(res.Body).Decode(&priceData)
 	if err != nil {
 		return nil, fmt.Errorf("error while decoding price data: %v", err)

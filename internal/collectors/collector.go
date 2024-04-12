@@ -4,9 +4,8 @@ package collectors
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
-
 	"github.com/schaermu/changedetection.io-exporter/internal/cdio"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
