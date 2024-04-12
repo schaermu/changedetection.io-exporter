@@ -34,17 +34,18 @@ func expectMetricCount(t *testing.T, c prometheus.Collector, expected int) {
 	}
 }
 
-func createCollectorTestDb() map[string]*data.WatchItem {
+// createCollectorTestDb creates a test database with two watch items and returns the UUID of the second item and the database.
+func createCollectorTestDb() (string, map[string]*data.WatchItem) {
 	watchDb := testutil.NewWatchDb(0)
 	uuid1, watch1 := testutil.NewTestItem("Item 1", 100, "USD")
 	uuid2, watch2 := testutil.NewTestItem("Item 2", 200, "USD")
 	watchDb[uuid1] = watch1
 	watchDb[uuid2] = watch2
-	return watchDb
+	return uuid2, watchDb
 }
 
 func TestPriceCollector(t *testing.T) {
-	watchDb := createCollectorTestDb()
+	_, watchDb := createCollectorTestDb()
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
@@ -57,12 +58,8 @@ func TestPriceCollector(t *testing.T) {
 	expectMetrics(t, c, "price_metrics.prom")
 }
 
-/*
-Test commented out for now due to flakiness, something seems to be off with the testing registry.
-See https://github.com/schaermu/changedetection.io-exporter/issues/7.
-
-func TestAutoUnregisterCollector(t *testing.T) {
-	watchDb := createCollectorTestDb()
+func TestPriceCollector_RemoveWatchDuringRuntime(t *testing.T) {
+	keyToRemove, watchDb := createCollectorTestDb()
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
@@ -70,21 +67,16 @@ func TestAutoUnregisterCollector(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	expectMetricCount(t, c, 2)
 
-	keyToRemove := maps.Keys(watchDb)[len(watchDb)-1]
 	delete(watchDb, keyToRemove)
 
 	expectMetricCount(t, c, 1)
 	expectMetrics(t, c, "price_metrics_autounregister.prom")
 }
-*/
 
-/*
-Test commented out because of some weirdness with the testing registry, see https://stackoverflow.com/questions/78297112/how-to-test-dynamic-metric-registration-in-custom-prometheus-exporter.
-See issue https://github.com/schaermu/changedetection.io-exporter/issues/7.
-
-func TestAutoregisterPriceCollector(t *testing.T) {
-	watchDb := createCollectorTestDb()
+func TestPriceCollector_NewWatchDuringRuntime(t *testing.T) {
+	_, watchDb := createCollectorTestDb()
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
@@ -101,4 +93,3 @@ func TestAutoregisterPriceCollector(t *testing.T) {
 	expectMetricCount(t, c, 3)
 	expectMetrics(t, c, "price_metrics_autoregister.prom")
 }
-*/
