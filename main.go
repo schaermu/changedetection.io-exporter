@@ -10,7 +10,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/schaermu/changedetection.io-exporter/internal/collectors"
+	"github.com/schaermu/changedetection.io-exporter/pkg/collectors"
 
 	log "github.com/sirupsen/logrus"
 )

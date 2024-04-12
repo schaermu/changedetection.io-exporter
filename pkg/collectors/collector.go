@@ -4,7 +4,7 @@ package collectors
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/schaermu/changedetection.io-exporter/internal/cdio"
+	"github.com/schaermu/changedetection.io-exporter/pkg/cdio"
 	log "github.com/sirupsen/logrus"
 )
 

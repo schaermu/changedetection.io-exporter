@@ -8,7 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/schaermu/changedetection.io-exporter/internal/data"
+	"github.com/schaermu/changedetection.io-exporter/pkg/data"
 )
 
 type ApiClient struct {

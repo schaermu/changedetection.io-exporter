@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/schaermu/changedetection.io-exporter/internal/data"
 	"github.com/schaermu/changedetection.io-exporter/internal/testutil"
+	"github.com/schaermu/changedetection.io-exporter/pkg/data"
 )
 
 func TestGetRequestApiKey(t *testing.T) {

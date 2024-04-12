@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
-	"github.com/schaermu/changedetection.io-exporter/internal/data"
+	"github.com/schaermu/changedetection.io-exporter/pkg/data"
 )
 
 type ApiTestServer struct {
