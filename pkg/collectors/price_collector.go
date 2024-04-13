@@ -3,24 +3,15 @@
 package collectors
 
 import (
-	"sync"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/schaermu/changedetection.io-exporter/pkg/cdio"
-	"github.com/schaermu/changedetection.io-exporter/pkg/data"
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	namespace = "changedetectionio"
-)
-
 type priceCollector struct {
-	sync.RWMutex
+	baseWatchCollector
 
-	ApiClient *cdio.ApiClient
-	watches   map[string]data.WatchItem
-	price     *prometheus.Desc
+	price *prometheus.Desc
 }
 
 func NewPriceCollector(endpoint string, key string) (*priceCollector, error) {
@@ -34,8 +25,7 @@ func NewPriceCollector(endpoint string, key string) (*priceCollector, error) {
 	log.Infof("Loaded %d watches from changedetection.io API", len(watches))
 
 	return &priceCollector{
-		ApiClient: client,
-		watches:   watches,
+		baseWatchCollector: *newBaseWatchCollector(client, watches),
 		price: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "watch", "price"),
 			"Current price of an offer type watch",
