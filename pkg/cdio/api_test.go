@@ -35,6 +35,36 @@ func TestGetWatches(t *testing.T) {
 	testutil.Equals(t, "Test Me", watches[uuid].Title)
 }
 
+func TestGetWatchData(t *testing.T) {
+	watchDb := testutil.NewWatchDb(1)
+	uuid, watch := testutil.NewTestItem("Test Me", 100, "USD")
+	watch.CheckCount = 2
+	watchDb[uuid] = watch
+	server := testutil.CreateTestApiServer(t, watchDb)
+	defer server.Close()
+
+	api := NewApiClient(server.URL(), "foo-bar-key")
+	watchItem, err := api.GetWatchData(uuid)
+
+	testutil.Ok(t, err)
+	testutil.Equals(t, "Test Me", watchItem.Title)
+	testutil.Equals(t, 2, watchItem.CheckCount)
+}
+
+func TestGetWatchData_NotFound(t *testing.T) {
+	watchDb := testutil.NewWatchDb(2)
+	server := testutil.CreateTestApiServer(t, watchDb)
+	defer server.Close()
+
+	nonExistingId := "i-surely-do-not-exist"
+
+	api := NewApiClient(server.URL(), "foo-bar-key")
+	watchItem, err := api.GetWatchData(nonExistingId)
+
+	testutil.Equals(t, fmt.Errorf("watch %s not found", nonExistingId), err)
+	testutil.Equals(t, (*data.WatchItem)(nil), watchItem)
+}
+
 func TestGetLatestPriceSnapshot(t *testing.T) {
 	watchDb := testutil.NewWatchDb(1)
 	uuid, watchItem := testutil.NewTestItem("Test Me", 100, "USD")
@@ -44,6 +74,7 @@ func TestGetLatestPriceSnapshot(t *testing.T) {
 
 	api := NewApiClient(server.URL(), "foo-bar-key")
 	priceData, err := api.GetLatestPriceSnapshot(uuid)
+
 	testutil.Ok(t, err)
 	testutil.Equals(t, float64(100), priceData.Price)
 	testutil.Equals(t, "USD", priceData.Currency)

@@ -68,6 +68,12 @@ func (client *ApiClient) GetWatchData(id string) (*data.WatchItem, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	switch res.StatusCode {
+	case 404:
+		// watch not found, was probably removed
+		return nil, fmt.Errorf("watch %s not found", id)
+	}
 	defer res.Body.Close()
 
 	var watchItem = data.WatchItem{}

@@ -51,6 +51,7 @@ func NewTestItem(title string, price float64, currency string) (string, *data.Wa
 
 func writeJson(rw http.ResponseWriter, v any) {
 	if res, err := json.Marshal(v); err == nil {
+		rw.Header().Set("Content-Type", "application/json")
 		rw.Write(res)
 	} else {
 		rw.WriteHeader(http.StatusInternalServerError)
@@ -82,6 +83,9 @@ func CreateTestApiServer(t *testing.T, watches map[string]*data.WatchItem) *ApiT
 						case "history/latest":
 							// return price data
 							writeJson(rw, watch.PriceData)
+						default:
+							// return details
+							writeJson(rw, watch)
 						}
 					} else {
 						// return details
