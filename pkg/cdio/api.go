@@ -58,6 +58,26 @@ func (client *ApiClient) GetWatches() (map[string]data.WatchItem, error) {
 	return watches, nil
 }
 
+func (client *ApiClient) GetWatchData(id string) (*data.WatchItem, error) {
+	req, err := client.getRequest("GET", fmt.Sprintf("watch/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := client.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var watchItem = data.WatchItem{}
+	err = json.NewDecoder(res.Body).Decode(&watchItem)
+	if err != nil {
+		return nil, err
+	}
+	return &watchItem, nil
+}
+
 func (client *ApiClient) GetLatestPriceSnapshot(id string) (*data.PriceData, error) {
 	req, err := client.getRequest("GET", fmt.Sprintf("watch/%s/history/latest", id), nil)
 	if err != nil {
