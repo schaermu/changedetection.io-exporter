@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/schaermu/changedetection.io-exporter/pkg/data"
+	log "github.com/sirupsen/logrus"
 )
 
 type ApiClient struct {
@@ -30,8 +31,11 @@ func (client *ApiClient) SetBaseUrl(baseUrl string) {
 }
 
 func (client *ApiClient) getRequest(method string, url string, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", client.baseUrl, url), body)
+	targetUrl := fmt.Sprintf("%s/%s", client.baseUrl, url)
+	log.Debugf("curl \"%s\" -H\"x-api-key:%s\"", targetUrl, client.key)
+	req, err := http.NewRequest(method, targetUrl, body)
 	if err != nil {
+		log.Debug(err)
 		return nil, err
 	}
 	req.Header.Add("x-api-key", client.key)
@@ -102,10 +106,27 @@ func (client *ApiClient) GetLatestPriceSnapshot(id string) (*data.PriceData, err
 
 	defer res.Body.Close()
 
-	var priceData = data.PriceData{}
-	err = json.NewDecoder(res.Body).Decode(&priceData)
+	bodyText, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error while decoding price data: %v", err)
+		return nil, err
+	}
+
+	var priceData = data.PriceData{}
+	err = json.Unmarshal(bodyText, &priceData)
+	if err != nil {
+		// check if the error is due to the response being an array
+		if err.Error() == "json: cannot unmarshal array into Go value of type data.PriceData" {
+			log.Debug("price data is an array, trying to decode as array")
+			var priceDataArray []data.PriceData
+			err = json.Unmarshal(bodyText, &priceDataArray)
+			if err != nil {
+				log.Error(err)
+				return nil, err
+			}
+			return &priceDataArray[0], nil
+		}
+		log.Error(err)
+		return nil, err
 	}
 	return &priceData, nil
 }
