@@ -38,7 +38,7 @@ func (client *ApiClient) getRequest(method string, url string, body io.Reader) (
 	return req, nil
 }
 
-func (client *ApiClient) GetWatches() (map[string]data.WatchItem, error) {
+func (client *ApiClient) GetWatches() (map[string]*data.WatchItem, error) {
 	req, err := client.getRequest("GET", "watch", nil)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func (client *ApiClient) GetWatches() (map[string]data.WatchItem, error) {
 	}
 	defer res.Body.Close()
 
-	watches := make(map[string]data.WatchItem)
+	watches := make(map[string]*data.WatchItem)
 	err = json.NewDecoder(res.Body).Decode(&watches)
 	if err != nil {
 		return nil, err

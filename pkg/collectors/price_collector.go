@@ -9,27 +9,18 @@ import (
 )
 
 type priceCollector struct {
-	baseWatchCollector
+	baseCollector
 
 	price *prometheus.Desc
 }
 
-func NewPriceCollector(endpoint string, key string) (*priceCollector, error) {
-	// load all registered watches from changedetection.io API
-	client := cdio.NewApiClient(endpoint, key)
-	watches, err := client.GetWatches()
-	if err != nil {
-		return nil, err
-	}
-
-	log.Infof("Loaded %d watches from changedetection.io API", len(watches))
-
+func NewPriceCollector(client *cdio.ApiClient) (*priceCollector, error) {
 	return &priceCollector{
-		baseWatchCollector: *newBaseWatchCollector(client, watches),
+		baseCollector: *newBaseCollector(client),
 		price: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "watch", "price"),
 			"Current price of an offer type watch",
-			[]string{"title"}, nil,
+			labels, nil,
 		),
 	}, nil
 }
@@ -46,11 +37,10 @@ func (c *priceCollector) Collect(ch chan<- prometheus.Metric) {
 	watches, err := c.ApiClient.GetWatches()
 	if err != nil {
 		log.Errorf("error while fetching watches: %v", err)
-	} else {
-		c.watches = watches
 	}
+	log.Infof("Collecting price metrics for %v watches", len(watches))
 
-	for uuid, watch := range c.watches {
+	for uuid, watch := range watches {
 		// get latest price snapshot
 		if pData, err := c.ApiClient.GetLatestPriceSnapshot(uuid); err == nil {
 			ch <- prometheus.MustNewConstMetric(c.price, prometheus.GaugeValue, pData.Price, []string{watch.Title}...)

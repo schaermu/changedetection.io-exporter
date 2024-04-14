@@ -10,6 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	promtest "github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/schaermu/changedetection.io-exporter/internal/testutil"
+	"github.com/schaermu/changedetection.io-exporter/pkg/cdio"
 	"github.com/schaermu/changedetection.io-exporter/pkg/data"
 )
 
@@ -44,12 +45,17 @@ func createCollectorTestDb() (string, map[string]*data.WatchItem) {
 	return uuid2, watchDb
 }
 
+func createTestClient(t *testing.T, url string) *cdio.ApiClient {
+	return cdio.NewApiClient(url, "foo-bar-key")
+}
+
 func TestPriceCollector(t *testing.T) {
 	_, watchDb := createCollectorTestDb()
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
-	c, err := NewPriceCollector(server.URL(), "foo-bar-key")
+	client := createTestClient(t, server.URL())
+	c, err := NewPriceCollector(client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +69,8 @@ func TestPriceCollector_RemoveWatchDuringRuntime(t *testing.T) {
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
-	c, err := NewPriceCollector(server.URL(), "foo-bar-key")
+	client := createTestClient(t, server.URL())
+	c, err := NewPriceCollector(client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +87,8 @@ func TestPriceCollector_NewWatchDuringRuntime(t *testing.T) {
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
-	c, err := NewPriceCollector(server.URL(), "foo-bar-key")
+	client := createTestClient(t, server.URL())
+	c, err := NewPriceCollector(client)
 	if err != nil {
 		t.Fatal(err)
 	}
