@@ -10,7 +10,7 @@ import (
 
 var (
 	namespace = "changedetectionio"
-	labels    = []string{"title"}
+	labels    = []string{"title", "source"}
 )
 
 type baseCollector struct {

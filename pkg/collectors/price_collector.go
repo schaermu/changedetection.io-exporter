@@ -43,7 +43,14 @@ func (c *priceCollector) Collect(ch chan<- prometheus.Metric) {
 	for uuid, watch := range watches {
 		// get latest price snapshot
 		if pData, err := c.ApiClient.GetLatestPriceSnapshot(uuid); err == nil {
-			ch <- prometheus.MustNewConstMetric(c.price, prometheus.GaugeValue, pData.Price, []string{watch.Title}...)
+			if metricLabels, err := watch.GetMetrics(); err != nil {
+				log.Error(err)
+				continue
+			} else {
+				ch <- prometheus.MustNewConstMetric(c.price, prometheus.GaugeValue, pData.Price, metricLabels...)
+			}
+		} else {
+			log.Error(err)
 		}
 	}
 }

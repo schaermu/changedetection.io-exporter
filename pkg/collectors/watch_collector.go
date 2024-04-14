@@ -61,13 +61,19 @@ func (c *watchCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 	log.Infof("Collecting watch metrics for %v watches", len(watches))
 
-	for uuid, watch := range watches {
+	for uuid := range watches {
 		// get latest watch data
 		if watchData, err := c.ApiClient.GetWatchData(uuid); err == nil {
-			ch <- prometheus.MustNewConstMetric(c.checkCount, prometheus.CounterValue, float64(watchData.CheckCount), []string{watch.Title}...)
-			ch <- prometheus.MustNewConstMetric(c.fetchTime, prometheus.GaugeValue, watchData.FetchTime, []string{watch.Title}...)
-			ch <- prometheus.MustNewConstMetric(c.notificationAlertCount, prometheus.CounterValue, float64(watchData.NotificationAlertCount), []string{watch.Title}...)
-			ch <- prometheus.MustNewConstMetric(c.lastCheckStatus, prometheus.GaugeValue, float64(watchData.LastCheckStatus), []string{watch.Title}...)
+			if metricLabels, err := watchData.GetMetrics(); err != nil {
+				continue
+			} else {
+				ch <- prometheus.MustNewConstMetric(c.checkCount, prometheus.CounterValue, float64(watchData.CheckCount), metricLabels...)
+				ch <- prometheus.MustNewConstMetric(c.fetchTime, prometheus.GaugeValue, watchData.FetchTime, metricLabels...)
+				ch <- prometheus.MustNewConstMetric(c.notificationAlertCount, prometheus.CounterValue, float64(watchData.NotificationAlertCount), metricLabels...)
+				ch <- prometheus.MustNewConstMetric(c.lastCheckStatus, prometheus.GaugeValue, float64(watchData.LastCheckStatus), metricLabels...)
+			}
+		} else {
+			log.Error(err)
 		}
 	}
 }

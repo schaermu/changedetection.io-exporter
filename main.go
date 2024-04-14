@@ -18,12 +18,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func main() {
+func init() {
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp:   true,
 		TimestampFormat: "2006-01-02 15:04:05.000000",
 	})
 
+	log.SetLevel(log.DebugLevel)
+}
+
+func main() {
 	var (
 		port   = os.Getenv("PORT")
 		apiUrl = os.Getenv("CDIO_API_BASE_URL")
@@ -51,14 +55,14 @@ func main() {
 	} else {
 		registry.MustRegister(priceCollector)
 	}
-	/*
-		watchCollector, err := collectors.NewWatchCollector(client)
-		if err != nil {
-			log.Fatal(err)
-		} else {
-			registry.MustRegister(watchCollector)
-		}
-	*/
+
+	watchCollector, err := collectors.NewWatchCollector(client)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		registry.MustRegister(watchCollector)
+	}
+
 	http.Handle("/", promhttp.HandlerFor(registry, promhttp.HandlerOpts{
 		ErrorLog: log.StandardLogger(),
 	}))
