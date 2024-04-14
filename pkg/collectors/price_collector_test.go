@@ -45,7 +45,7 @@ func createCollectorTestDb() (string, map[string]*data.WatchItem) {
 	return uuid2, watchDb
 }
 
-func createTestClient(t *testing.T, url string) *cdio.ApiClient {
+func createTestClient(url string) *cdio.ApiClient {
 	return cdio.NewApiClient(url, "foo-bar-key")
 }
 
@@ -54,7 +54,7 @@ func TestPriceCollector(t *testing.T) {
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
-	client := createTestClient(t, server.URL())
+	client := createTestClient(server.URL())
 	c, err := NewPriceCollector(client)
 	if err != nil {
 		t.Fatal(err)
@@ -69,7 +69,7 @@ func TestPriceCollector_RemoveWatchDuringRuntime(t *testing.T) {
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
-	client := createTestClient(t, server.URL())
+	client := createTestClient(server.URL())
 	c, err := NewPriceCollector(client)
 	if err != nil {
 		t.Fatal(err)
@@ -87,7 +87,7 @@ func TestPriceCollector_NewWatchDuringRuntime(t *testing.T) {
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
-	client := createTestClient(t, server.URL())
+	client := createTestClient(server.URL())
 	c, err := NewPriceCollector(client)
 	if err != nil {
 		t.Fatal(err)
@@ -100,4 +100,19 @@ func TestPriceCollector_NewWatchDuringRuntime(t *testing.T) {
 
 	expectMetricCount(t, c, 3)
 	expectMetrics(t, c, "price_metrics_autoregister.prom")
+}
+
+func TestPriceCollector_HandlesArrayResponse(t *testing.T) {
+	_, watchDb := createCollectorTestDb()
+	server := testutil.CreateTestApiServer(t, watchDb, testutil.WithPricesAsArray())
+	defer server.Close()
+
+	client := createTestClient(server.URL())
+	c, err := NewPriceCollector(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectMetricCount(t, c, 2)
+	expectMetrics(t, c, "price_metrics.prom")
 }
