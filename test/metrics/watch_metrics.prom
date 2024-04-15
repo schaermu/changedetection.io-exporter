@@ -1,0 +1,16 @@
+# HELP changedetectionio_watch_check_count Number of checks for a watch
+# TYPE changedetectionio_watch_check_count counter
+changedetectionio_watch_check_count{source="www.item-1.org", title="Item 1"} 20
+changedetectionio_watch_check_count{source="www.item-2.org", title="Item 2"} 20
+# HELP changedetectionio_watch_fetch_time Time it took to fetch the watch
+# TYPE changedetectionio_watch_fetch_time gauge
+changedetectionio_watch_fetch_time{source="www.item-1.org", title="Item 1"} 15
+changedetectionio_watch_fetch_time{source="www.item-2.org", title="Item 2"} 15
+# HELP changedetectionio_watch_last_check_status Status of the last check for a watch
+# TYPE changedetectionio_watch_last_check_status gauge
+changedetectionio_watch_last_check_status{source="www.item-1.org", title="Item 1"} 200
+changedetectionio_watch_last_check_status{source="www.item-2.org", title="Item 2"} 200
+# HELP changedetectionio_watch_notification_alert_count Number of notification alerts for a watch
+# TYPE changedetectionio_watch_notification_alert_count counter
+changedetectionio_watch_notification_alert_count{source="www.item-1.org", title="Item 1"} 10
+changedetectionio_watch_notification_alert_count{source="www.item-2.org", title="Item 2"} 10

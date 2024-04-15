@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/schaermu/changedetection.io-exporter/pkg/data"
+	log "github.com/sirupsen/logrus"
 )
 
 type ApiClient struct {
@@ -25,20 +26,27 @@ func NewApiClient(baseUrl string, key string) *ApiClient {
 	}
 }
 
+func NewTestApiClient(url string) *ApiClient {
+	return NewApiClient(url, "foo-bar-key")
+}
+
 func (client *ApiClient) SetBaseUrl(baseUrl string) {
 	client.baseUrl = fmt.Sprintf("%s/api/v1", baseUrl)
 }
 
 func (client *ApiClient) getRequest(method string, url string, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", client.baseUrl, url), body)
+	targetUrl := fmt.Sprintf("%s/%s", client.baseUrl, url)
+	log.Debugf("curl \"%s\" -H\"x-api-key:%s\"", targetUrl, client.key)
+	req, err := http.NewRequest(method, targetUrl, body)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 	req.Header.Add("x-api-key", client.key)
 	return req, nil
 }
 
-func (client *ApiClient) GetWatches() (map[string]data.WatchItem, error) {
+func (client *ApiClient) GetWatches() (map[string]*data.WatchItem, error) {
 	req, err := client.getRequest("GET", "watch", nil)
 	if err != nil {
 		return nil, err
@@ -50,12 +58,38 @@ func (client *ApiClient) GetWatches() (map[string]data.WatchItem, error) {
 	}
 	defer res.Body.Close()
 
-	watches := make(map[string]data.WatchItem)
+	watches := make(map[string]*data.WatchItem)
 	err = json.NewDecoder(res.Body).Decode(&watches)
 	if err != nil {
 		return nil, err
 	}
 	return watches, nil
+}
+
+func (client *ApiClient) GetWatchData(id string) (*data.WatchItem, error) {
+	req, err := client.getRequest("GET", fmt.Sprintf("watch/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := client.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	switch res.StatusCode {
+	case 404:
+		// watch not found, was probably removed
+		return nil, fmt.Errorf("watch %s not found", id)
+	}
+	defer res.Body.Close()
+
+	var watchItem = data.WatchItem{}
+	err = json.NewDecoder(res.Body).Decode(&watchItem)
+	if err != nil {
+		return nil, err
+	}
+	return &watchItem, nil
 }
 
 func (client *ApiClient) GetLatestPriceSnapshot(id string) (*data.PriceData, error) {
@@ -76,10 +110,26 @@ func (client *ApiClient) GetLatestPriceSnapshot(id string) (*data.PriceData, err
 
 	defer res.Body.Close()
 
-	var priceData = data.PriceData{}
-	err = json.NewDecoder(res.Body).Decode(&priceData)
+	bodyText, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error while decoding price data: %v", err)
+		return nil, err
+	}
+
+	var priceData = data.PriceData{}
+	err = json.Unmarshal(bodyText, &priceData)
+	if err != nil {
+		// check if the error is due to the response being an array
+		if err.Error() == "json: cannot unmarshal array into Go value of type data.PriceData" {
+			var priceDataArray []data.PriceData
+			err = json.Unmarshal(bodyText, &priceDataArray)
+			if err != nil {
+				log.Error(err)
+				return nil, err
+			}
+			return &priceDataArray[0], nil
+		}
+		log.Error(err)
+		return nil, err
 	}
 	return &priceData, nil
 }

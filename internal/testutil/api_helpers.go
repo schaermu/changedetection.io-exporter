@@ -8,16 +8,32 @@ import (
 	"net/http/httptest"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
 	"github.com/schaermu/changedetection.io-exporter/pkg/data"
 )
 
+type ApiTestServerOptions struct {
+	fmt.Stringer
+	PricesAsArray bool
+}
+type ApiTestServerOption func(*ApiTestServerOptions)
+
+func (o ApiTestServerOptions) String() string {
+	return fmt.Sprintf("ApiTestServerOptions{PricesAsArray: %t}", o.PricesAsArray)
+}
+
+func WithPricesAsArray() ApiTestServerOption {
+	return func(o *ApiTestServerOptions) {
+		o.PricesAsArray = true
+	}
+}
+
 type ApiTestServer struct {
 	Server  *httptest.Server
+	Options ApiTestServerOptions
 	watches map[string]*data.WatchItem
 }
 
@@ -32,15 +48,20 @@ func (s *ApiTestServer) Close() {
 func NewWatchDb(numItems int) map[string]*data.WatchItem {
 	ret := make(map[string]*data.WatchItem)
 	for i := 0; i < numItems; i++ {
-		uuid, watch := NewTestItem(fmt.Sprintf("testwatch #%s", strconv.Itoa(i+1)), rand.Float64(), "USD")
+		uuid, watch := NewTestItem(fmt.Sprintf("testwatch-%s", strconv.Itoa(i+1)), rand.Float64(), "USD", 20, 15, 10)
 		ret[uuid] = watch
 	}
 	return ret
 }
 
-func NewTestItem(title string, price float64, currency string) (string, *data.WatchItem) {
+func NewTestItem(title string, price float64, currency string, checkCount int, fetchTime float64, alertCount int) (string, *data.WatchItem) {
 	return uuid.New().String(), &data.WatchItem{
-		Title: title,
+		Title:                  title,
+		Url:                    fmt.Sprintf("https://www.%s.org/", strings.ReplaceAll(strings.ToLower(title), " ", "-")),
+		CheckCount:             checkCount,
+		FetchTime:              fetchTime,
+		NotificationAlertCount: alertCount,
+		LastCheckStatus:        200,
 		PriceData: &data.PriceData{
 			Price:        price,
 			Currency:     currency,
@@ -51,14 +72,25 @@ func NewTestItem(title string, price float64, currency string) (string, *data.Wa
 
 func writeJson(rw http.ResponseWriter, v any) {
 	if res, err := json.Marshal(v); err == nil {
+		rw.Header().Set("Content-Type", "application/json")
 		rw.Write(res)
 	} else {
 		rw.WriteHeader(http.StatusInternalServerError)
 	}
 }
 
-func CreateTestApiServer(t *testing.T, watches map[string]*data.WatchItem) *ApiTestServer {
+func CreateTestApiServer(t *testing.T, watches map[string]*data.WatchItem, options ...ApiTestServerOption) *ApiTestServer {
 	var watchDetailPattern = regexp.MustCompile(`^\/api\/v1\/watch\/(?P<UUID>[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12})\/?(?P<ACTION>.+)?`)
+
+	// pull in options
+	opts := ApiTestServerOptions{
+		PricesAsArray: false,
+	}
+	for _, o := range options {
+		o(&opts)
+	}
+	t.Log("pulled in options", opts)
+
 	return &ApiTestServer{
 		watches: watches,
 		Server: httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -73,7 +105,7 @@ func CreateTestApiServer(t *testing.T, watches map[string]*data.WatchItem) *ApiT
 				// find watch
 				watch, ok := watches[uuid]
 				if !ok {
-					log.Infof("could not find watch with id %s", uuid)
+					t.Logf("could not find watch with id %s", uuid)
 					rw.WriteHeader(http.StatusNotFound)
 				} else {
 					actionIndex := watchDetailPattern.SubexpIndex("ACTION")
@@ -81,7 +113,14 @@ func CreateTestApiServer(t *testing.T, watches map[string]*data.WatchItem) *ApiT
 						switch matches[actionIndex] {
 						case "history/latest":
 							// return price data
-							writeJson(rw, watch.PriceData)
+							if opts.PricesAsArray {
+								writeJson(rw, []data.PriceData{*watch.PriceData})
+							} else {
+								writeJson(rw, watch.PriceData)
+							}
+						default:
+							// return details
+							writeJson(rw, watch)
 						}
 					} else {
 						// return details
@@ -89,7 +128,7 @@ func CreateTestApiServer(t *testing.T, watches map[string]*data.WatchItem) *ApiT
 					}
 				}
 			} else {
-				log.Infof("could not map path %s", req.URL.Path)
+				t.Logf("could not map path %s", req.URL.Path)
 				rw.WriteHeader((http.StatusNotFound))
 			}
 		})),
