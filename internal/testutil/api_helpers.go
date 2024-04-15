@@ -80,7 +80,9 @@ func NewTestItem(title string, price float64, currency string, checkCount int, f
 func writeJson(rw http.ResponseWriter, v any) {
 	if res, err := json.Marshal(v); err == nil {
 		rw.Header().Set("Content-Type", "application/json")
-		rw.Write(res)
+		if _, err := rw.Write(res); err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+		}
 	} else {
 		rw.WriteHeader(http.StatusInternalServerError)
 	}
