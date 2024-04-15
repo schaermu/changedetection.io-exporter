@@ -1,6 +1,7 @@
 BINARY_NAME=changedetectionio_exporter
 GOCOVER=go tool cover
 GOTESTSUM=go run gotest.tools/gotestsum@latest
+STATICCHECK=go run honnef.co/go/tools/cmd/staticcheck@latest
 
 .DEFAULT_GOAL := all
 .PHONY: clean test watch cover run start
@@ -22,6 +23,10 @@ clean:
 	go clean
 	go clean -testcache
 	rm -rf ./build
+
+check:
+	go vet ./...
+	$(STATICCHECK) ./...
 
 test:
 	$(GOTESTSUM) -f standard-verbose -- -tags=test -coverprofile=coverage.txt -race -covermode=atomic ./pkg/...
