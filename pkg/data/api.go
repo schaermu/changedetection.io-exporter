@@ -19,16 +19,24 @@ type WatchItem struct {
 	PriceData              *PriceData `json:"price,omitempty"`
 }
 
+type PriceData struct {
+	Price        float64 `json:"price"`
+	Currency     string  `json:"priceCurrency"`
+	Availability string  `json:"availability"`
+}
+
+type SystemInfo struct {
+	Version        string   `json:"version"`
+	Uptime         float64  `json:"uptime"`
+	WatchCount     int      `json:"watch_count"`
+	OverdueWatches []string `json:"overdue_watches"`
+	QueueSize      int      `json:"queue_size"`
+}
+
 func (w *WatchItem) GetMetrics() ([]string, error) {
 	url, err := url.Parse(w.Url)
 	if err != nil {
 		return nil, err
 	}
 	return []string{w.Title, url.Host}, nil
-}
-
-type PriceData struct {
-	Price        float64 `json:"price"`
-	Currency     string  `json:"priceCurrency"`
-	Availability string  `json:"availability"`
 }
