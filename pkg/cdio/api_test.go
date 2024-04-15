@@ -67,6 +67,12 @@ func TestGetWatchData_NotFound(t *testing.T) {
 	testutil.Equals(t, (*data.WatchItem)(nil), watchItem)
 }
 
+func TestSetBaseUrl(t *testing.T) {
+	api := NewApiClient("http://localhost:8080", "foo-bar-key")
+	api.SetBaseUrl("http://localhost:8081")
+	testutil.Equals(t, "http://localhost:8081/api/v1", api.baseUrl)
+}
+
 func TestGetLatestPriceSnapshot(t *testing.T) {
 	watchDb := testutil.NewWatchDb(1)
 	uuid, watchItem := testutil.NewTestItem("Test Me", 100, "USD", 20, 15, 10)
@@ -82,12 +88,6 @@ func TestGetLatestPriceSnapshot(t *testing.T) {
 	testutil.Equals(t, "USD", priceData.Currency)
 }
 
-func TestSetBaseUrl(t *testing.T) {
-	api := NewApiClient("http://localhost:8080", "foo-bar-key")
-	api.SetBaseUrl("http://localhost:8081")
-	testutil.Equals(t, "http://localhost:8081/api/v1", api.baseUrl)
-}
-
 func TestGetLastestPriceSnapshot_NotFound(t *testing.T) {
 	watchDb := testutil.NewWatchDb(2)
 	server := testutil.CreateTestApiServer(t, watchDb)
@@ -99,4 +99,18 @@ func TestGetLastestPriceSnapshot_NotFound(t *testing.T) {
 	priceData, err := api.GetLatestPriceSnapshot(nonExistingId)
 	testutil.Equals(t, fmt.Errorf("watch %s not found", nonExistingId), err)
 	testutil.Equals(t, (*data.PriceData)(nil), priceData)
+}
+
+func TestGetSystemInfo(t *testing.T) {
+	watchDb := testutil.NewWatchDb(1)
+	server := testutil.CreateTestApiServer(t, watchDb, testutil.WithSystemInfo(&data.SystemInfo{
+		Version: "1.0.0",
+	}))
+	defer server.Close()
+
+	api := NewTestApiClient(server.URL())
+	info, err := api.GetSystemInfo()
+
+	testutil.Ok(t, err)
+	testutil.Equals(t, "1.0.0", info.Version)
 }

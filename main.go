@@ -63,6 +63,13 @@ func main() {
 		registry.MustRegister(watchCollector)
 	}
 
+	systemCollector, err := collectors.NewSystemCollector(client)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		registry.MustRegister(systemCollector)
+	}
+
 	http.Handle("/", promhttp.HandlerFor(registry, promhttp.HandlerOpts{
 		ErrorLog: log.StandardLogger(),
 	}))

@@ -133,3 +133,23 @@ func (client *ApiClient) GetLatestPriceSnapshot(id string) (*data.PriceData, err
 	}
 	return &priceData, nil
 }
+
+func (client *ApiClient) GetSystemInfo() (*data.SystemInfo, error) {
+	req, err := client.getRequest("GET", "systeminfo", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := client.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var systemInfo = data.SystemInfo{}
+	err = json.NewDecoder(res.Body).Decode(&systemInfo)
+	if err != nil {
+		return nil, err
+	}
+	return &systemInfo, nil
+}

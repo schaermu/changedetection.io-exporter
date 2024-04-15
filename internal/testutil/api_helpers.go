@@ -18,16 +18,23 @@ import (
 type ApiTestServerOptions struct {
 	fmt.Stringer
 	PricesAsArray bool
+	SystemInfo    *data.SystemInfo
 }
 type ApiTestServerOption func(*ApiTestServerOptions)
 
 func (o ApiTestServerOptions) String() string {
-	return fmt.Sprintf("ApiTestServerOptions{PricesAsArray: %t}", o.PricesAsArray)
+	return fmt.Sprintf("ApiTestServerOptions{PricesAsArray: %t, SystemInfo: %v}", o.PricesAsArray, o.SystemInfo)
 }
 
 func WithPricesAsArray() ApiTestServerOption {
 	return func(o *ApiTestServerOptions) {
 		o.PricesAsArray = true
+	}
+}
+
+func WithSystemInfo(info *data.SystemInfo) ApiTestServerOption {
+	return func(o *ApiTestServerOptions) {
+		o.SystemInfo = info
 	}
 }
 
@@ -85,6 +92,7 @@ func CreateTestApiServer(t *testing.T, watches map[string]*data.WatchItem, optio
 	// pull in options
 	opts := ApiTestServerOptions{
 		PricesAsArray: false,
+		SystemInfo:    &data.SystemInfo{Version: "1.0.0", Uptime: 100, WatchCount: len(watches), OverdueWatches: []string{}, QueueSize: 0},
 	}
 	for _, o := range options {
 		o(&opts)
@@ -96,6 +104,8 @@ func CreateTestApiServer(t *testing.T, watches map[string]*data.WatchItem, optio
 		Server: httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 			if req.URL.Path == "/api/v1/watch" {
 				writeJson(rw, watches)
+			} else if req.URL.Path == "/api/v1/systeminfo" {
+				writeJson(rw, opts.SystemInfo)
 			} else if watchDetailPattern.MatchString(req.URL.Path) {
 				// get UUID from path
 				matches := watchDetailPattern.FindStringSubmatch(req.URL.Path)
