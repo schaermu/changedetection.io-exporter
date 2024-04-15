@@ -1,0 +1,12 @@
+# HELP changedetectionio_system_overdue_watch_count Current changedetection.io instance overdue watch count
+# TYPE changedetectionio_system_overdue_watch_count gauge
+changedetectionio_system_overdue_watch_count{version="0.1.1"} 1
+# HELP changedetectionio_system_queue_size Current changedetection.io instance queue size
+# TYPE changedetectionio_system_queue_size gauge
+changedetectionio_system_queue_size{version="0.1.1"} 0
+# HELP changedetectionio_system_uptime Current changedetection.io instance system uptime
+# TYPE changedetectionio_system_uptime gauge
+changedetectionio_system_uptime{version="0.1.1"} 1111.1
+# HELP changedetectionio_system_watch_count Current changedetection.io instance watch count
+# TYPE changedetectionio_system_watch_count gauge
+changedetectionio_system_watch_count{version="0.1.1"} 2
