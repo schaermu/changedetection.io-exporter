@@ -59,7 +59,7 @@ func main() {
 	)
 
 	// register prometheus handler
-	http.Handle("/", promhttp.HandlerFor(registry, promhttp.HandlerOpts{
+	http.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{
 		ErrorLog: log.StandardLogger(),
 	}))
 	log.Info(fmt.Sprintf("Beginning to serve on port %s", port))
