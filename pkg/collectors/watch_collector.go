@@ -59,12 +59,12 @@ func (c *watchCollector) Collect(ch chan<- prometheus.Metric) {
 	if err != nil {
 		log.Errorf("error while fetching watches: %v", err)
 	}
-	log.Infof("Collecting watch metrics for %v watches", len(watches))
 
 	for uuid := range watches {
 		// get latest watch data
 		if watchData, err := c.ApiClient.GetWatchData(uuid); err == nil {
 			if metricLabels, err := watchData.GetMetrics(); err != nil {
+				log.Error(err)
 				continue
 			} else {
 				ch <- prometheus.MustNewConstMetric(c.checkCount, prometheus.CounterValue, float64(watchData.CheckCount), metricLabels...)

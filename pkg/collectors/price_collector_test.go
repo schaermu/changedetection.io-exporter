@@ -3,116 +3,80 @@
 package collectors
 
 import (
-	"os"
-	"path"
 	"testing"
 
-	"github.com/prometheus/client_golang/prometheus"
-	promtest "github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/schaermu/changedetection.io-exporter/internal/testutil"
 	"github.com/schaermu/changedetection.io-exporter/pkg/cdio"
-	"github.com/schaermu/changedetection.io-exporter/pkg/data"
 )
 
 var (
-	expectedMetrics = []string{"changedetectionio_watch_price"}
+	expectedPriceMetrics = []string{"changedetectionio_watch_price"}
 )
 
-func expectMetrics(t *testing.T, c prometheus.Collector, fixture string) {
-	exp, err := os.Open(testutil.GetFixturePath(path.Join("metrics", fixture)))
-	if err != nil {
-		t.Fatalf("Error opening fixture file %q: %v", fixture, err)
-	}
-	if err := promtest.CollectAndCompare(c, exp, expectedMetrics...); err != nil {
-		t.Fatalf("Unexpected metrics returned: %v", err)
-	}
-}
-
-func expectMetricCount(t *testing.T, c prometheus.Collector, expected int) {
-	count := promtest.CollectAndCount(c, expectedMetrics...)
-	if count != expected {
-		t.Fatalf("Expected %d metrics, got %d", expected, count)
-	}
-}
-
-// createCollectorTestDb creates a test database with two watch items and returns the UUID of the second item and the database.
-func createCollectorTestDb() (string, map[string]*data.WatchItem) {
-	watchDb := testutil.NewWatchDb(0)
-	uuid1, watch1 := testutil.NewTestItem("Item 1", 100, "USD")
-	uuid2, watch2 := testutil.NewTestItem("Item 2", 200, "USD")
-	watchDb[uuid1] = watch1
-	watchDb[uuid2] = watch2
-	return uuid2, watchDb
-}
-
-func createTestClient(url string) *cdio.ApiClient {
-	return cdio.NewApiClient(url, "foo-bar-key")
-}
-
 func TestPriceCollector(t *testing.T) {
-	_, watchDb := createCollectorTestDb()
+	_, watchDb := testutil.NewCollectorTestDb()
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
-	client := createTestClient(server.URL())
+	client := cdio.NewTestApiClient(server.URL())
 	c, err := NewPriceCollector(client)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	expectMetricCount(t, c, 2)
-	expectMetrics(t, c, "price_metrics.prom")
+	testutil.ExpectMetricCount(t, c, 2, expectedPriceMetrics...)
+	testutil.ExpectMetrics(t, c, "price_metrics.prom", expectedPriceMetrics...)
 }
 
 func TestPriceCollector_RemoveWatchDuringRuntime(t *testing.T) {
-	keyToRemove, watchDb := createCollectorTestDb()
+	keyToRemove, watchDb := testutil.NewCollectorTestDb()
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
-	client := createTestClient(server.URL())
+	client := cdio.NewTestApiClient(server.URL())
 	c, err := NewPriceCollector(client)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectMetricCount(t, c, 2)
+	testutil.ExpectMetricCount(t, c, 2, expectedPriceMetrics...)
 
 	delete(watchDb, keyToRemove)
 
-	expectMetricCount(t, c, 1)
-	expectMetrics(t, c, "price_metrics_autounregister.prom")
+	testutil.ExpectMetricCount(t, c, 1, expectedPriceMetrics...)
+	testutil.ExpectMetrics(t, c, "price_metrics_autounregister.prom", expectedPriceMetrics...)
 }
 
 func TestPriceCollector_NewWatchDuringRuntime(t *testing.T) {
-	_, watchDb := createCollectorTestDb()
+	_, watchDb := testutil.NewCollectorTestDb()
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
-	client := createTestClient(server.URL())
+	client := cdio.NewTestApiClient(server.URL())
 	c, err := NewPriceCollector(client)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectMetricCount(t, c, 2)
+	testutil.ExpectMetricCount(t, c, 2, expectedPriceMetrics...)
 
 	// now add a new watch and expect the collector to pick it up
-	uuid, newItem := testutil.NewTestItem("Item 3", 300, "USD")
+	uuid, newItem := testutil.NewTestItem("Item 3", 300, "USD", 0, 0, 0)
 	watchDb[uuid] = newItem
 
-	expectMetricCount(t, c, 3)
-	expectMetrics(t, c, "price_metrics_autoregister.prom")
+	testutil.ExpectMetricCount(t, c, 3, expectedPriceMetrics...)
+	testutil.ExpectMetrics(t, c, "price_metrics_autoregister.prom", expectedPriceMetrics...)
 }
 
 func TestPriceCollector_HandlesArrayResponse(t *testing.T) {
-	_, watchDb := createCollectorTestDb()
+	_, watchDb := testutil.NewCollectorTestDb()
 	server := testutil.CreateTestApiServer(t, watchDb, testutil.WithPricesAsArray())
 	defer server.Close()
 
-	client := createTestClient(server.URL())
+	client := cdio.NewTestApiClient(server.URL())
 	c, err := NewPriceCollector(client)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	expectMetricCount(t, c, 2)
-	expectMetrics(t, c, "price_metrics.prom")
+	testutil.ExpectMetricCount(t, c, 2, expectedPriceMetrics...)
+	testutil.ExpectMetrics(t, c, "price_metrics.prom", expectedPriceMetrics...)
 }

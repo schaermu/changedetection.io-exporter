@@ -26,6 +26,10 @@ func NewApiClient(baseUrl string, key string) *ApiClient {
 	}
 }
 
+func NewTestApiClient(url string) *ApiClient {
+	return NewApiClient(url, "foo-bar-key")
+}
+
 func (client *ApiClient) SetBaseUrl(baseUrl string) {
 	client.baseUrl = fmt.Sprintf("%s/api/v1", baseUrl)
 }
@@ -35,7 +39,7 @@ func (client *ApiClient) getRequest(method string, url string, body io.Reader) (
 	log.Debugf("curl \"%s\" -H\"x-api-key:%s\"", targetUrl, client.key)
 	req, err := http.NewRequest(method, targetUrl, body)
 	if err != nil {
-		log.Debug(err)
+		log.Error(err)
 		return nil, err
 	}
 	req.Header.Add("x-api-key", client.key)
@@ -116,7 +120,6 @@ func (client *ApiClient) GetLatestPriceSnapshot(id string) (*data.PriceData, err
 	if err != nil {
 		// check if the error is due to the response being an array
 		if err.Error() == "json: cannot unmarshal array into Go value of type data.PriceData" {
-			log.Debug("price data is an array, trying to decode as array")
 			var priceDataArray []data.PriceData
 			err = json.Unmarshal(bodyText, &priceDataArray)
 			if err != nil {

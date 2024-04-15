@@ -38,7 +38,6 @@ func (c *priceCollector) Collect(ch chan<- prometheus.Metric) {
 	if err != nil {
 		log.Errorf("error while fetching watches: %v", err)
 	}
-	log.Infof("Collecting price metrics for %v watches", len(watches))
 
 	for uuid, watch := range watches {
 		// get latest price snapshot

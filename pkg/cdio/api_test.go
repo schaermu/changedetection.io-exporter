@@ -15,20 +15,22 @@ func TestGetRequestApiKey(t *testing.T) {
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
-	api := NewApiClient(server.URL(), "foo-bar-key")
+	apiKey := "manual-api-key"
+
+	api := NewApiClient(server.URL(), apiKey)
 	request, err := api.getRequest("GET", "/watch", nil)
 	testutil.Ok(t, err)
-	testutil.Equals(t, "foo-bar-key", request.Header.Get("x-api-key"))
+	testutil.Equals(t, apiKey, request.Header.Get("x-api-key"))
 }
 
 func TestGetWatches(t *testing.T) {
 	watchDb := testutil.NewWatchDb(1)
-	uuid, watch := testutil.NewTestItem("Test Me", 100, "USD")
+	uuid, watch := testutil.NewTestItem("Test Me", 100, "USD", 20, 15, 10)
 	watchDb[uuid] = watch
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
-	api := NewApiClient(server.URL(), "foo-bar-key")
+	api := NewTestApiClient(server.URL())
 	watches, err := api.GetWatches()
 	testutil.Ok(t, err)
 	testutil.Equals(t, 2, len(watches))
@@ -37,13 +39,13 @@ func TestGetWatches(t *testing.T) {
 
 func TestGetWatchData(t *testing.T) {
 	watchDb := testutil.NewWatchDb(1)
-	uuid, watch := testutil.NewTestItem("Test Me", 100, "USD")
+	uuid, watch := testutil.NewTestItem("Test Me", 100, "USD", 20, 15, 10)
 	watch.CheckCount = 2
 	watchDb[uuid] = watch
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
-	api := NewApiClient(server.URL(), "foo-bar-key")
+	api := NewTestApiClient(server.URL())
 	watchItem, err := api.GetWatchData(uuid)
 
 	testutil.Ok(t, err)
@@ -58,7 +60,7 @@ func TestGetWatchData_NotFound(t *testing.T) {
 
 	nonExistingId := "i-surely-do-not-exist"
 
-	api := NewApiClient(server.URL(), "foo-bar-key")
+	api := NewTestApiClient(server.URL())
 	watchItem, err := api.GetWatchData(nonExistingId)
 
 	testutil.Equals(t, fmt.Errorf("watch %s not found", nonExistingId), err)
@@ -67,12 +69,12 @@ func TestGetWatchData_NotFound(t *testing.T) {
 
 func TestGetLatestPriceSnapshot(t *testing.T) {
 	watchDb := testutil.NewWatchDb(1)
-	uuid, watchItem := testutil.NewTestItem("Test Me", 100, "USD")
+	uuid, watchItem := testutil.NewTestItem("Test Me", 100, "USD", 20, 15, 10)
 	watchDb[uuid] = watchItem
 	server := testutil.CreateTestApiServer(t, watchDb)
 	defer server.Close()
 
-	api := NewApiClient(server.URL(), "foo-bar-key")
+	api := NewTestApiClient(server.URL())
 	priceData, err := api.GetLatestPriceSnapshot(uuid)
 
 	testutil.Ok(t, err)
@@ -93,7 +95,7 @@ func TestGetLastestPriceSnapshot_NotFound(t *testing.T) {
 
 	nonExistingId := "i-surely-do-not-exist"
 
-	api := NewApiClient(server.URL(), "foo-bar-key")
+	api := NewTestApiClient(server.URL())
 	priceData, err := api.GetLatestPriceSnapshot(nonExistingId)
 	testutil.Equals(t, fmt.Errorf("watch %s not found", nonExistingId), err)
 	testutil.Equals(t, (*data.PriceData)(nil), priceData)
