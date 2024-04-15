@@ -14,7 +14,7 @@ var (
 		"changedetectionio_watch_check_count",
 		"changedetectionio_watch_fetch_time",
 		"changedetectionio_watch_notification_alert_count",
-		"changedetectionio_watch__last_check_status",
+		"changedetectionio_watch_last_check_status",
 	}
 )
 

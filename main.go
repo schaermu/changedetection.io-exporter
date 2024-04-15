@@ -18,22 +18,34 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	port     = os.Getenv("PORT")
+	logLevel = os.Getenv("LOG_LEVEL")
+	apiUrl   = os.Getenv("CDIO_API_BASE_URL")
+	apiKey   = os.Getenv("CDIO_API_KEY")
+)
+
 func init() {
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp:   true,
 		TimestampFormat: "2006-01-02 15:04:05.000000",
 	})
 
-	log.SetLevel(log.DebugLevel)
+	switch logLevel {
+	case "debug":
+		log.SetLevel(log.DebugLevel)
+	case "warn":
+		log.SetLevel(log.WarnLevel)
+	case "error":
+		log.SetLevel(log.ErrorLevel)
+	case "fatal":
+		log.SetLevel(log.FatalLevel)
+	default:
+		log.SetLevel(log.InfoLevel)
+	}
 }
 
 func main() {
-	var (
-		port   = os.Getenv("PORT")
-		apiUrl = os.Getenv("CDIO_API_BASE_URL")
-		apiKey = os.Getenv("CDIO_API_KEY")
-	)
-
 	if port == "" {
 		port = "9123"
 	}
@@ -59,7 +71,7 @@ func main() {
 	)
 
 	// register prometheus handler
-	http.Handle("/", promhttp.HandlerFor(registry, promhttp.HandlerOpts{
+	http.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{
 		ErrorLog: log.StandardLogger(),
 	}))
 	log.Info(fmt.Sprintf("Beginning to serve on port %s", port))
