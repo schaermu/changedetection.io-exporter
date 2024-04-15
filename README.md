@@ -19,13 +19,13 @@ services:
     container_name: changedetection-exporter
     restart: unless-stopped
     environment:
-      - CDIO_API_BASE_URL=http://changedetection
+      - CDIO_API_BASE_URL=http://changedetection:5000
       - CDIO_API_KEY=...
     depends_on:
       changedetection:
         condition: service_started
 ```
-This example assumes that you have started an instance of changedetection.io within the same docker network reachable via hostname `changedetection`.
+This example assumes that you have started an instance of changedetection.io within the same docker network reachable via hostname `changedetection` and didn't change the default port of 5000.
 
 ### Kubernetes (tbd)
 ```
@@ -50,7 +50,7 @@ If you want to read those metrics into Prometheus or VictoriaMetrics, you have t
 scrape_configs:
   - job_name: "changedetection"
     static_configs:
-      - targets: ["changedetectionio-exporter:9123"]
+      - targets: ["changedetection-exporter:9123"]
 ```
 If you haven't got any watches registered on your changedetection.io instance, you will simply get the system metrics read in:
 |Metric name|Labels|Type|
