@@ -19,10 +19,7 @@ func TestPriceCollector(t *testing.T) {
 	defer server.Close()
 
 	client := cdio.NewTestApiClient(server.URL())
-	c, err := NewPriceCollector(client)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := NewPriceCollector(client)
 
 	testutil.ExpectMetricCount(t, c, 2, expectedPriceMetrics...)
 	testutil.ExpectMetrics(t, c, "price_metrics.prom", expectedPriceMetrics...)
@@ -34,10 +31,8 @@ func TestPriceCollector_RemoveWatchDuringRuntime(t *testing.T) {
 	defer server.Close()
 
 	client := cdio.NewTestApiClient(server.URL())
-	c, err := NewPriceCollector(client)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := NewPriceCollector(client)
+
 	testutil.ExpectMetricCount(t, c, 2, expectedPriceMetrics...)
 
 	delete(watchDb, keyToRemove)
@@ -52,10 +47,8 @@ func TestPriceCollector_NewWatchDuringRuntime(t *testing.T) {
 	defer server.Close()
 
 	client := cdio.NewTestApiClient(server.URL())
-	c, err := NewPriceCollector(client)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := NewPriceCollector(client)
+
 	testutil.ExpectMetricCount(t, c, 2, expectedPriceMetrics...)
 
 	// now add a new watch and expect the collector to pick it up
@@ -72,10 +65,7 @@ func TestPriceCollector_HandlesArrayResponse(t *testing.T) {
 	defer server.Close()
 
 	client := cdio.NewTestApiClient(server.URL())
-	c, err := NewPriceCollector(client)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := NewPriceCollector(client)
 
 	testutil.ExpectMetricCount(t, c, 2, expectedPriceMetrics...)
 	testutil.ExpectMetrics(t, c, "price_metrics.prom", expectedPriceMetrics...)

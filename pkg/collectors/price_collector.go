@@ -14,7 +14,7 @@ type priceCollector struct {
 	price *prometheus.Desc
 }
 
-func NewPriceCollector(client *cdio.ApiClient) (*priceCollector, error) {
+func NewPriceCollector(client *cdio.ApiClient) *priceCollector {
 	return &priceCollector{
 		baseCollector: *newBaseCollector(client),
 		price: prometheus.NewDesc(
@@ -22,7 +22,7 @@ func NewPriceCollector(client *cdio.ApiClient) (*priceCollector, error) {
 			"Current price of an offer type watch",
 			labels, nil,
 		),
-	}, nil
+	}
 }
 
 func (c *priceCollector) Describe(ch chan<- *prometheus.Desc) {

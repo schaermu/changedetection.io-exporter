@@ -44,32 +44,21 @@ func main() {
 
 	client := cdio.NewApiClient(apiUrl, apiKey)
 	registry := prometheus.NewPedanticRegistry()
+
+	// register default collectors
 	registry.MustRegister(
 		promcollectors.NewProcessCollector(promcollectors.ProcessCollectorOpts{}),
 		promcollectors.NewGoCollector(),
 	)
 
-	priceCollector, err := collectors.NewPriceCollector(client)
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		registry.MustRegister(priceCollector)
-	}
+	// register changedetection.io collectors
+	registry.MustRegister(
+		collectors.NewSystemCollector(client),
+		collectors.NewWatchCollector(client),
+		collectors.NewPriceCollector(client),
+	)
 
-	watchCollector, err := collectors.NewWatchCollector(client)
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		registry.MustRegister(watchCollector)
-	}
-
-	systemCollector, err := collectors.NewSystemCollector(client)
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		registry.MustRegister(systemCollector)
-	}
-
+	// register prometheus handler
 	http.Handle("/", promhttp.HandlerFor(registry, promhttp.HandlerOpts{
 		ErrorLog: log.StandardLogger(),
 	}))

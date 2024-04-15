@@ -24,10 +24,7 @@ func TestWatchCollector(t *testing.T) {
 	defer server.Close()
 
 	client := cdio.NewTestApiClient(server.URL())
-	c, err := NewWatchCollector(client)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := NewWatchCollector(client)
 
 	//testutil.ExpectMetricCount(t, c, 2, expectedWatchMetrics...)
 	testutil.ExpectMetrics(t, c, "watch_metrics.prom", expectedWatchMetrics...)

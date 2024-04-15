@@ -17,7 +17,7 @@ type watchCollector struct {
 	lastCheckStatus        *prometheus.Desc
 }
 
-func NewWatchCollector(client *cdio.ApiClient) (*watchCollector, error) {
+func NewWatchCollector(client *cdio.ApiClient) *watchCollector {
 	return &watchCollector{
 		baseCollector: *newBaseCollector(client),
 		checkCount: prometheus.NewDesc(
@@ -40,7 +40,7 @@ func NewWatchCollector(client *cdio.ApiClient) (*watchCollector, error) {
 			"Status of the last check for a watch",
 			labels, nil,
 		),
-	}, nil
+	}
 }
 
 func (c *watchCollector) Describe(ch chan<- *prometheus.Desc) {
