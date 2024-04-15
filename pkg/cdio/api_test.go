@@ -101,6 +101,21 @@ func TestGetLastestPriceSnapshot_NotFound(t *testing.T) {
 	testutil.Equals(t, (*data.PriceData)(nil), priceData)
 }
 
+func TestGetLatestPriceSnapshot_ArrayPriceData(t *testing.T) {
+	watchDb := testutil.NewWatchDb(0)
+	uuid, watchItem := testutil.NewTestItem("Test Me", 100, "USD", 20, 15, 10)
+	watchDb[uuid] = watchItem
+	server := testutil.CreateTestApiServer(t, watchDb, testutil.WithPricesAsArray())
+	defer server.Close()
+
+	api := NewTestApiClient(server.URL())
+	priceData, err := api.GetLatestPriceSnapshot(uuid)
+
+	testutil.Ok(t, err)
+	testutil.Equals(t, float64(100), priceData.Price)
+	testutil.Equals(t, "USD", priceData.Currency)
+}
+
 func TestGetSystemInfo(t *testing.T) {
 	watchDb := testutil.NewWatchDb(1)
 	server := testutil.CreateTestApiServer(t, watchDb, testutil.WithSystemInfo(&data.SystemInfo{
