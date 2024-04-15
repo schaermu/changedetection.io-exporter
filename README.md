@@ -36,7 +36,8 @@ The exporter is configured using the following environment variables:
 |---|---|---|
 |`CDIO_API_BASE_URL`|-|yes|
 |`CDIO_API_KEY`|-|yes|
-|`PORT`|9123|no|
+|`PORT`|`9123`|no|
+|`LOG_LEVEL`|`info`|no|
 
 For all scenarios, setting both the `CDIO_API_BASE_URL` and a `CDIO_API_KEY` environment variable is mandatory, and the exporter will panic on startup if any of those is missing.
 
