@@ -17,7 +17,7 @@ type systemCollector struct {
 	watchCount   *prometheus.Desc
 }
 
-func NewSystemCollector(client *cdio.ApiClient) (*systemCollector, error) {
+func NewSystemCollector(client *cdio.ApiClient) *systemCollector {
 	return &systemCollector{
 		baseCollector: *newBaseCollector(client),
 		queueSize: prometheus.NewDesc(
@@ -40,7 +40,7 @@ func NewSystemCollector(client *cdio.ApiClient) (*systemCollector, error) {
 			"Current changedetection.io instance system uptime",
 			[]string{"version"}, nil,
 		),
-	}, nil
+	}
 }
 
 func (c *systemCollector) Describe(ch chan<- *prometheus.Desc) {

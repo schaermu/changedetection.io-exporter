@@ -31,10 +31,7 @@ func TestSystemCollector(t *testing.T) {
 	defer server.Close()
 
 	client := cdio.NewTestApiClient(server.URL())
-	c, err := NewSystemCollector(client)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := NewSystemCollector(client)
 
 	testutil.ExpectMetricCount(t, c, 1, expectedSystemMetrics...)
 	testutil.ExpectMetrics(t, c, "system_metrics.prom", expectedSystemMetrics...)
