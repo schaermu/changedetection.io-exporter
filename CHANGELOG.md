@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/schaermu/changedetection.io-exporter/compare/v0.1.0...v0.1.1) (2024-04-16)
+
+
+### Bug Fixes
+
+* collectors ignore watches with missing title ([#22](https://github.com/schaermu/changedetection.io-exporter/issues/22)) ([0547a71](https://github.com/schaermu/changedetection.io-exporter/commit/0547a719053052b7ab55bab41c7bd14938886bbf))
+
 ## [0.1.0](https://github.com/schaermu/changedetection.io-exporter/compare/v0.0.2...v0.1.0) (2024-04-15)
 
 
