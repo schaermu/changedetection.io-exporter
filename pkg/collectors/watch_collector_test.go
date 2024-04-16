@@ -29,3 +29,16 @@ func TestWatchCollector(t *testing.T) {
 	//testutil.ExpectMetricCount(t, c, 2, expectedWatchMetrics...)
 	testutil.ExpectMetrics(t, c, "watch_metrics.prom", expectedWatchMetrics...)
 }
+
+func TestWatchCollector_IgnoresWatchesWithoutTitle(t *testing.T) {
+	_, watchDb := testutil.NewCollectorTestDb()
+	server := testutil.CreateTestApiServer(t, watchDb)
+	emptyUuid, emptyTitleItem := testutil.NewTestItem("", 100, "CHF", 20, 15, 10)
+	watchDb[emptyUuid] = emptyTitleItem
+	defer server.Close()
+
+	client := cdio.NewTestApiClient(server.URL())
+	c := NewWatchCollector(client)
+
+	testutil.ExpectMetrics(t, c, "watch_metrics.prom", expectedWatchMetrics...)
+}
