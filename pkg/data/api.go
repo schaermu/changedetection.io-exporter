@@ -3,6 +3,7 @@
 package data
 
 import (
+	"fmt"
 	"net/url"
 )
 
@@ -37,6 +38,9 @@ func (w *WatchItem) GetMetrics() ([]string, error) {
 	url, err := url.Parse(w.Url)
 	if err != nil {
 		return nil, err
+	}
+	if w.Title == "" {
+		return nil, fmt.Errorf("title is empty")
 	}
 	return []string{w.Title, url.Host}, nil
 }
