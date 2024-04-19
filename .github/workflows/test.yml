@@ -27,7 +27,7 @@ jobs:
       run: make build
       
     - name: Test
-      run: make coverage
+      run: make cover
       
     - name: Update coverage report
       if: github.event_name == 'push'
