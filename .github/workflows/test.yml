@@ -25,14 +25,15 @@ jobs:
     
     - name: Build
       run: make build
-    
+      
     - name: Test
-      run: make test
+      run: make coverage
       
     - name: Update coverage report
       if: github.event_name == 'push'
       uses: ncruces/go-coverage-report@v0
       with:
+        coverage-file: coverage.out
         report: true
         chart: true
         amend: true
