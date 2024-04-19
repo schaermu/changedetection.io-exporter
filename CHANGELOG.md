@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/schaermu/changedetection.io-exporter/compare/v0.1.1...v0.1.2) (2024-04-19)
+
+
+### Bug Fixes
+
+* error on loading watches when one of them failed ([#25](https://github.com/schaermu/changedetection.io-exporter/issues/25)) ([16ea98e](https://github.com/schaermu/changedetection.io-exporter/commit/16ea98e11092eecf4cc09a706cdad7855204de12))
+
 ## [0.1.1](https://github.com/schaermu/changedetection.io-exporter/compare/v0.1.0...v0.1.1) (2024-04-16)
 
 
