@@ -34,5 +34,6 @@ jobs:
       uses: ncruces/go-coverage-report@v0
       with:
         report: true
+        chart: true
         amend: true
       continue-on-error: true

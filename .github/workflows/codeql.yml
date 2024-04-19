@@ -1,4 +1,4 @@
-name: "Run CodeQL"
+name: codeql
 
 on:
   push:
