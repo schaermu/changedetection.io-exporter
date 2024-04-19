@@ -64,3 +64,25 @@ func TestWatchItem_GetMetrics_EmptyTitle(t *testing.T) {
 		t.Errorf("Expected error, got nil")
 	}
 }
+
+func TestWatchItem_GetMetrics_InvalidUri(t *testing.T) {
+	w := WatchItem{
+		Title: "Test",
+		Url:   "foo-bar-is-not-a-uri",
+	}
+	_, err := w.GetMetrics()
+	if err == nil {
+		t.Errorf("Expected error, got nil")
+	}
+}
+
+func TestWatchItem_GetMetrics_EmptyHost(t *testing.T) {
+	w := WatchItem{
+		Title: "Test",
+		Url:   "http://",
+	}
+	_, err := w.GetMetrics()
+	if err == nil {
+		t.Errorf("Expected error, got nil")
+	}
+}

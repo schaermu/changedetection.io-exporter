@@ -46,10 +46,13 @@ type SystemInfo struct {
 }
 
 func (w *WatchItem) GetMetrics() ([]string, error) {
-	url, err := url.Parse(w.Url)
+	url, err := url.ParseRequestURI(w.Url)
 	if err != nil {
 		return nil, err
+	} else if url.Host == "" {
+		return nil, fmt.Errorf("host is empty")
 	}
+
 	if w.Title == "" {
 		return nil, fmt.Errorf("title is empty")
 	}
