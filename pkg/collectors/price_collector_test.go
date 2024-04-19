@@ -59,14 +59,15 @@ func TestPriceCollector_NewWatchDuringRuntime(t *testing.T) {
 	testutil.ExpectMetrics(t, c, "price_metrics_autoregister.prom", expectedPriceMetrics...)
 }
 
-func TestPriceCollector_HandlesArrayResponse(t *testing.T) {
+func TestPriceCollector_IgnoresWatchesWithoutTitle(t *testing.T) {
 	_, watchDb := testutil.NewCollectorTestDb()
-	server := testutil.CreateTestApiServer(t, watchDb, testutil.WithPricesAsArray())
+	server := testutil.CreateTestApiServer(t, watchDb)
+	emptyUuid, emptyTitleItem := testutil.NewTestItem("", 100, "CHF", 20, 15, 10)
+	watchDb[emptyUuid] = emptyTitleItem
 	defer server.Close()
 
 	client := cdio.NewTestApiClient(server.URL())
 	c := NewPriceCollector(client)
 
-	testutil.ExpectMetricCount(t, c, 2, expectedPriceMetrics...)
 	testutil.ExpectMetrics(t, c, "price_metrics.prom", expectedPriceMetrics...)
 }
