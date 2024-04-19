@@ -1,4 +1,7 @@
 # Changedetection.io Prometheus Exporter
+[![GitHub Release](https://img.shields.io/github/v/release/schaermu/changedetection.io-exporter)](https://github.com/schaermu/changedetection.io-exporter/releases/)
+[![golangci-lint](https://github.com/schaermu/changedetection.io-exporter/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/schaermu/changedetection.io-exporter/actions/workflows/golangci-lint.yml) [![tests](https://github.com/schaermu/changedetection.io-exporter/actions/workflows/test.yml/badge.svg)](https://github.com/schaermu/changedetection.io-exporter/actions/workflows/test.yml) [![coverage](https://github.com/schaermu/changedetection.io-exporter/wiki/coverage.svg)](https://raw.githack.com/wiki/schaermu/changedetection.io-exporter/coverage.html)
+
 This application exports the latest prices of watches configured inside a [changedetection.io](https://changedetection.io) instance as prometheus-compatible metrics. Additionally, the exporter exposes metrics regarding scraping statistics and certain system information in order to enable system monitoring as well.
 
 - Exposes price metrics for eligible watches (must be of type @Offer).

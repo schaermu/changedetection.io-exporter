@@ -1,4 +1,4 @@
-name: Test application
+name: tests
 
 on:
   push:
@@ -28,3 +28,12 @@ jobs:
     
     - name: Test
       run: make test
+      
+    - name: Update coverage report
+      if: github.event_name == 'push'
+      uses: ncruces/go-coverage-report@v0
+      with:
+        report: true
+        chart: true
+        amend: true
+      continue-on-error: true
